@@ -13,7 +13,7 @@ COPY internal ./internal
 
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /out/anvil ./cmd/anvil
 
-FROM --platform=$TARGETPLATFORM gcr.io/distroless/static-debian12
+FROM gcr.io/distroless/static-debian12
 
 COPY --from=builder /out/anvil /usr/local/bin/anvil
 
