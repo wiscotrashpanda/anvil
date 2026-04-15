@@ -10,8 +10,9 @@ This repository is the public product repository for Anvil. It is intended to sh
 
 This is an active working repository. The README is intentionally lightweight and will evolve as the CLI, reconciler implementations, packaging, and workflows take shape.
 
-The repository now includes the first Go CLI scaffold under `cmd/anvil` and `internal/cli`.
+The repository now includes the first `anvil reconcile` path under `cmd/anvil`, `internal/cli`, and the manifest loading packages.
 Anvil is distributed both as downloadable release binaries and as a Docker image.
+The separate authoring CLI, `smith`, is intended to live in its own repository, and shared manifest schema code now lives in the separate `alloy` Go module repository consumed by both tools.
 
 ## Core Principles
 
@@ -64,10 +65,16 @@ Example manifests live in [examples/manifests](/Volumes/Bolt/Code/wiscotrashpand
 
 ## Local Development
 
-Run the current CLI scaffold locally with:
+Run the CLI help locally with:
 
 ```bash
 go run ./cmd/anvil --help
+```
+
+Run the current dry-run reconcile path against the public example manifests with:
+
+```bash
+go run ./cmd/anvil reconcile --manifests ./examples/manifests
 ```
 
 Build a local binary with:
@@ -75,6 +82,7 @@ Build a local binary with:
 ```bash
 go build -o bin/anvil ./cmd/anvil
 ./bin/anvil --help
+./bin/anvil reconcile --manifests ./examples/manifests
 ```
 
 Build Linux binaries for both common container targets with:
@@ -105,7 +113,9 @@ Anvil currently publishes two artifact types:
 - GitHub Release binaries for direct CLI consumption
 - Docker images on Docker Hub for containerized execution
 
-The intended primary consumption path for downstream automation is the versioned binary release. Tagged releases publish platform-specific binary archives through GitHub Releases. The Docker image is retained as a supported secondary distribution path for portability and future flexibility.
+The intended primary consumption path for downstream automation remains the versioned binary release, with `anvil` as the current runtime tool used in reconciliation workflows. The Docker images are retained as supported secondary distribution paths for portability and future flexibility.
+
+The tagged release workflow currently publishes `anvil` release archives only. Shared manifest schema code now lives in the separate `alloy` module so both `anvil` and `smith` can depend on the same versioned manifest definitions.
 
 ## Architecture Decisions
 
