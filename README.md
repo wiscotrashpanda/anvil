@@ -59,6 +59,18 @@ This repository remains public by design.
 
 Example manifests live in [examples/manifests](/Volumes/Bolt/Code/wiscotrashpanda/anvil/examples/manifests/README.md).
 
+## Architecture Decisions
+
+Strategic and architectural decisions are tracked as ADRs under [docs/adr](/Volumes/Bolt/Code/wiscotrashpanda/anvil/docs/adr/README.md).
+
+## AI-Assisted Development
+
+AI agents are used in this repository for coding assistance, drafting, and documentation generation.
+
+They are used as tools to accelerate implementation and communication, not as a substitute for engineering judgment or as unreviewed "vibe coding."
+
+All code and documentation committed to this repository are reviewed by the repository author and are expected to be understood before they are kept.
+
 ## Working Notes
 
 - `AGENTS.md` is the durable internal guidance file for the repository.
