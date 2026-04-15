@@ -1,0 +1,10 @@
+apiVersion: anvil.example.io/v1alpha1
+kind: GitHubRepository
+metadata:
+  name: example-repo
+spec:
+  owner: example-org
+  name: example-repo
+  visibility: private
+  description: Example GitHub repository manifest for public documentation
+  autoInit: true
