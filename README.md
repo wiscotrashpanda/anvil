@@ -76,10 +76,24 @@ go build -o bin/anvil ./cmd/anvil
 ./bin/anvil --help
 ```
 
+Build Linux binaries for both common container targets with:
+
+```bash
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/anvil-linux-amd64 ./cmd/anvil
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o bin/anvil-linux-arm64 ./cmd/anvil
+```
+
 Build the Docker image with:
 
 ```bash
 docker build -t anvil:local .
+docker run --rm anvil:local
+```
+
+Build a specific Docker target platform locally with:
+
+```bash
+docker buildx build --platform linux/arm64 -t anvil:local --load .
 docker run --rm anvil:local
 ```
 
@@ -100,4 +114,4 @@ All code and documentation committed to this repository are reviewed by the repo
 - `AGENTS.md` is the durable internal guidance file for the repository.
 - `README.md` is the public-facing working document and should stay concise.
 - As implementation lands, this file should be expanded with setup, usage, release, and workflow documentation.
-- GitHub Actions now includes a basic build workflow that tests the CLI, compiles a Linux binary artifact, and builds the Docker image.
+- GitHub Actions now includes a basic build workflow that tests the CLI, compiles Linux binaries for `amd64` and `arm64`, and publishes a multi-architecture Docker image.
