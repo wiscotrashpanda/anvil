@@ -69,6 +69,20 @@ Run the current CLI scaffold locally with:
 go run ./cmd/anvil --help
 ```
 
+Build a local binary with:
+
+```bash
+go build -o bin/anvil ./cmd/anvil
+./bin/anvil --help
+```
+
+Build the Docker image with:
+
+```bash
+docker build -t anvil:local .
+docker run --rm anvil:local
+```
+
 ## Architecture Decisions
 
 Strategic and architectural decisions are tracked as ADRs under [docs/adr](/Volumes/Bolt/Code/wiscotrashpanda/anvil/docs/adr/README.md).
@@ -86,3 +100,4 @@ All code and documentation committed to this repository are reviewed by the repo
 - `AGENTS.md` is the durable internal guidance file for the repository.
 - `README.md` is the public-facing working document and should stay concise.
 - As implementation lands, this file should be expanded with setup, usage, release, and workflow documentation.
+- GitHub Actions now includes a basic build workflow that tests the CLI, compiles a Linux binary artifact, and builds the Docker image.
