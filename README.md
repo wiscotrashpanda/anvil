@@ -11,6 +11,7 @@ This repository is the public product repository for Anvil. It is intended to sh
 This is an active working repository. The README is intentionally lightweight and will evolve as the CLI, reconciler implementations, packaging, and workflows take shape.
 
 The repository now includes the first Go CLI scaffold under `cmd/anvil` and `internal/cli`.
+Anvil is distributed both as downloadable release binaries and as a Docker image.
 
 ## Core Principles
 
@@ -97,6 +98,15 @@ docker buildx build --platform linux/arm64 -t anvil:local --load .
 docker run --rm anvil:local
 ```
 
+## Distribution
+
+Anvil currently publishes two artifact types:
+
+- GitHub Release binaries for direct CLI consumption
+- Docker images on Docker Hub for containerized execution
+
+The intended primary consumption path for downstream automation is the versioned binary release. Tagged releases publish platform-specific binary archives through GitHub Releases. The Docker image is retained as a supported secondary distribution path for portability and future flexibility.
+
 ## Architecture Decisions
 
 Strategic and architectural decisions are tracked as ADRs under [docs/adr](/Volumes/Bolt/Code/wiscotrashpanda/anvil/docs/adr/README.md).
@@ -114,4 +124,5 @@ All code and documentation committed to this repository are reviewed by the repo
 - `AGENTS.md` is the durable internal guidance file for the repository.
 - `README.md` is the public-facing working document and should stay concise.
 - As implementation lands, this file should be expanded with setup, usage, release, and workflow documentation.
-- GitHub Actions now includes a basic build workflow that tests the CLI, compiles Linux binaries for `amd64` and `arm64`, and publishes a multi-architecture Docker image.
+- GitHub Actions includes a build workflow that tests the CLI, compiles Linux binaries for `amd64` and `arm64`, and publishes a multi-architecture Docker image.
+- GitHub Actions also includes a release workflow that builds tagged binary archives and publishes them to GitHub Releases.
