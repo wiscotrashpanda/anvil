@@ -10,7 +10,7 @@ This repository is the public product repository for Anvil. It is intended to sh
 
 This is an active working repository. The README is intentionally lightweight and will evolve as the CLI, reconciler implementations, packaging, and workflows take shape.
 
-The repository now includes the first Go CLI scaffold under `cmd/anvil` and `internal/cli`.
+The repository now includes the first `anvil reconcile` path under `cmd/anvil`, `internal/cli`, and the manifest loading packages.
 Anvil is distributed both as downloadable release binaries and as a Docker image.
 
 ## Core Principles
@@ -64,10 +64,16 @@ Example manifests live in [examples/manifests](/Volumes/Bolt/Code/wiscotrashpand
 
 ## Local Development
 
-Run the current CLI scaffold locally with:
+Run the CLI help locally with:
 
 ```bash
 go run ./cmd/anvil --help
+```
+
+Run the current dry-run reconcile path against the public example manifests with:
+
+```bash
+go run ./cmd/anvil reconcile --manifests ./examples/manifests
 ```
 
 Build a local binary with:
@@ -75,6 +81,7 @@ Build a local binary with:
 ```bash
 go build -o bin/anvil ./cmd/anvil
 ./bin/anvil --help
+./bin/anvil reconcile --manifests ./examples/manifests
 ```
 
 Build Linux binaries for both common container targets with:
