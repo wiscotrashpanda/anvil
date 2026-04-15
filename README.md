@@ -10,6 +10,8 @@ This repository is the public product repository for Anvil. It is intended to sh
 
 This is an active working repository. The README is intentionally lightweight and will evolve as the CLI, reconciler implementations, packaging, and workflows take shape.
 
+The repository now includes the first Go CLI scaffold under `cmd/anvil` and `internal/cli`.
+
 ## Core Principles
 
 - Manifests are atomic: each manifest describes one resource kind.
@@ -58,6 +60,14 @@ This repository remains public by design.
 ## Example Manifests
 
 Example manifests live in [examples/manifests](/Volumes/Bolt/Code/wiscotrashpanda/anvil/examples/manifests/README.md).
+
+## Local Development
+
+Run the current CLI scaffold locally with:
+
+```bash
+go run ./cmd/anvil --help
+```
 
 ## Architecture Decisions
 
