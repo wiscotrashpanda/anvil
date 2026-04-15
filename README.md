@@ -10,6 +10,8 @@ This repository is the public product repository for Anvil. It is intended to sh
 
 This is an active working repository. The README is intentionally lightweight and will evolve as the CLI, reconciler implementations, packaging, and workflows take shape.
 
+The repository now includes the first Go CLI scaffold under `cmd/anvil` and `internal/cli`.
+
 ## Core Principles
 
 - Manifests are atomic: each manifest describes one resource kind.
@@ -59,6 +61,42 @@ This repository remains public by design.
 
 Example manifests live in [examples/manifests](/Volumes/Bolt/Code/wiscotrashpanda/anvil/examples/manifests/README.md).
 
+## Local Development
+
+Run the current CLI scaffold locally with:
+
+```bash
+go run ./cmd/anvil --help
+```
+
+Build a local binary with:
+
+```bash
+go build -o bin/anvil ./cmd/anvil
+./bin/anvil --help
+```
+
+Build Linux binaries for both common container targets with:
+
+```bash
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/anvil-linux-amd64 ./cmd/anvil
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o bin/anvil-linux-arm64 ./cmd/anvil
+```
+
+Build the Docker image with:
+
+```bash
+docker build -t anvil:local .
+docker run --rm anvil:local
+```
+
+Build a specific Docker target platform locally with:
+
+```bash
+docker buildx build --platform linux/arm64 -t anvil:local --load .
+docker run --rm anvil:local
+```
+
 ## Architecture Decisions
 
 Strategic and architectural decisions are tracked as ADRs under [docs/adr](/Volumes/Bolt/Code/wiscotrashpanda/anvil/docs/adr/README.md).
@@ -76,3 +114,4 @@ All code and documentation committed to this repository are reviewed by the repo
 - `AGENTS.md` is the durable internal guidance file for the repository.
 - `README.md` is the public-facing working document and should stay concise.
 - As implementation lands, this file should be expanded with setup, usage, release, and workflow documentation.
+- GitHub Actions now includes a basic build workflow that tests the CLI, compiles Linux binaries for `amd64` and `arm64`, and publishes a multi-architecture Docker image.
