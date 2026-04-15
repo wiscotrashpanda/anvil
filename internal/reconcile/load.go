@@ -7,7 +7,7 @@ import (
 )
 
 type Plan struct {
-	githubRepositories []manifest.GitHubRepositoryManifest
+	githubRepositories []manifest.LoadedGitHubRepositoryManifest
 }
 
 func Load(path string) (Plan, error) {
@@ -26,7 +26,7 @@ func (p Plan) Messages() []string {
 
 	for _, repository := range p.githubRepositories {
 		messages = append(messages,
-			fmt.Sprintf("Reconciling GitHubRepository %s/%s", repository.Spec.Owner, repository.Spec.Name),
+			fmt.Sprintf("Reconciling GitHubRepository %s/%s", repository.Manifest.Spec.Owner, repository.Manifest.Spec.Name),
 			"Dry run only: no external changes applied",
 		)
 	}

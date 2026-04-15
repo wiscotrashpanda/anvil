@@ -8,37 +8,17 @@ import (
 	"sort"
 	"strings"
 
+	manifestv1alpha1 "github.com/wiscotrashpanda/alloy/manifest/v1alpha1"
 	"gopkg.in/yaml.v3"
 )
 
-type Metadata struct {
-	Name string `yaml:"name"`
-}
-
-type Envelope struct {
-	APIVersion string    `yaml:"apiVersion"`
-	Kind       string    `yaml:"kind"`
-	Metadata   Metadata  `yaml:"metadata"`
-	Spec       yaml.Node `yaml:"spec"`
-}
-
-type GitHubRepositorySpec struct {
-	Owner       string `yaml:"owner"`
-	Name        string `yaml:"name"`
-	Visibility  string `yaml:"visibility"`
-	Description string `yaml:"description"`
-	AutoInit    bool   `yaml:"autoInit"`
-}
-
-type GitHubRepositoryManifest struct {
-	Path       string
-	APIVersion string
-	Metadata   Metadata
-	Spec       GitHubRepositorySpec
+type LoadedGitHubRepositoryManifest struct {
+	Path     string
+	Manifest manifestv1alpha1.GitHubRepositoryManifest
 }
 
 type Result struct {
-	GitHubRepositories []GitHubRepositoryManifest
+	GitHubRepositories []LoadedGitHubRepositoryManifest
 }
 
 func LoadDir(path string) (Result, error) {
@@ -89,52 +69,49 @@ func LoadDir(path string) (Result, error) {
 	return result, nil
 }
 
-func loadGitHubRepositoryManifest(path string) (GitHubRepositoryManifest, error) {
+func loadGitHubRepositoryManifest(path string) (LoadedGitHubRepositoryManifest, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return GitHubRepositoryManifest{}, fmt.Errorf("read manifest %q: %w", path, err)
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("read manifest %q: %w", path, err)
 	}
 
-	var envelope Envelope
+	var envelope manifestv1alpha1.Envelope
 	if err := yaml.Unmarshal(data, &envelope); err != nil {
-		return GitHubRepositoryManifest{}, fmt.Errorf("parse manifest %q: %w", path, err)
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("parse manifest %q: %w", path, err)
 	}
 
 	if envelope.APIVersion == "" {
-		return GitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing apiVersion", path)
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing apiVersion", path)
 	}
 
 	if envelope.Kind == "" {
-		return GitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing kind", path)
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing kind", path)
 	}
 
 	if envelope.Metadata.Name == "" {
-		return GitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing metadata.name", path)
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing metadata.name", path)
 	}
 
 	switch envelope.Kind {
-	case "GitHubRepository":
-		var spec GitHubRepositorySpec
+	case manifestv1alpha1.KindGitHubRepository:
+		var spec manifestv1alpha1.GitHubRepositorySpec
 		if err := envelope.Spec.Decode(&spec); err != nil {
-			return GitHubRepositoryManifest{}, fmt.Errorf("decode GitHubRepository spec in %q: %w", path, err)
+			return LoadedGitHubRepositoryManifest{}, fmt.Errorf("decode GitHubRepository spec in %q: %w", path, err)
 		}
 
-		if spec.Owner == "" {
-			return GitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing spec.owner", path)
+		manifest := manifestv1alpha1.NewGitHubRepositoryManifest(envelope.Metadata, spec)
+		manifest.APIVersion = envelope.APIVersion
+
+		if err := manifest.Validate(); err != nil {
+			return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q %w", path, err)
 		}
 
-		if spec.Name == "" {
-			return GitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing spec.name", path)
-		}
-
-		return GitHubRepositoryManifest{
-			Path:       path,
-			APIVersion: envelope.APIVersion,
-			Metadata:   envelope.Metadata,
-			Spec:       spec,
+		return LoadedGitHubRepositoryManifest{
+			Path:     path,
+			Manifest: manifest,
 		}, nil
 	default:
-		return GitHubRepositoryManifest{}, fmt.Errorf("manifest %q has unsupported kind %q", path, envelope.Kind)
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q has unsupported kind %q", path, envelope.Kind)
 	}
 }
 

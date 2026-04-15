@@ -30,12 +30,12 @@ spec:
 	}
 
 	repository := result.GitHubRepositories[0]
-	if repository.Metadata.Name != "example-repo" {
-		t.Fatalf("expected metadata.name to be example-repo, got %q", repository.Metadata.Name)
+	if repository.Manifest.Metadata.Name != "example-repo" {
+		t.Fatalf("expected metadata.name to be example-repo, got %q", repository.Manifest.Metadata.Name)
 	}
 
-	if repository.Spec.Owner != "example-org" {
-		t.Fatalf("expected spec.owner to be example-org, got %q", repository.Spec.Owner)
+	if repository.Manifest.Spec.Owner != "example-org" {
+		t.Fatalf("expected spec.owner to be example-org, got %q", repository.Manifest.Spec.Owner)
 	}
 }
 
