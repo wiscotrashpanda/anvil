@@ -1,4 +1,4 @@
-# 0004: Separate `anvil`, `smith`, and shared schema code into distinct repositories
+# 0004: Separate `anvil`, `smyth`, and shared schema code into distinct repositories
 
 - Status: Accepted
 - Date: 2026-04-15
@@ -18,9 +18,9 @@ The project therefore needs to decide whether to keep both responsibilities insi
 The project will separate reconciliation, authoring, and shared schema code into distinct repositories from the start.
 
 - `anvil` remains the reconciliation CLI.
-- A separate admin or authoring repository, `smith`, may handle manifest generation, editing, and implementation-repository-oriented workflows.
-- A separate shared Go module repository, `alloy`, holds common manifest schema code consumed by both `anvil` and `smith`.
-- `anvil` and `smith` should both depend on `alloy` for shared manifest types and validation rather than copying structs between repositories.
+- A separate admin or authoring repository, `smyth`, may handle manifest generation, editing, and implementation-repository-oriented workflows.
+- A separate shared Go module repository, `alloy`, holds common manifest schema code consumed by both `anvil` and `smyth`.
+- `anvil` and `smyth` should both depend on `alloy` for shared manifest types and validation rather than copying structs between repositories.
 
 The initial extraction scope for `alloy` is intentionally small and schema-focused:
 
@@ -34,7 +34,7 @@ The following should stay out of `alloy`:
 - reconciliation planning or provider-specific apply logic
 - CLI command handling
 - filesystem walking and repo-specific loading behavior
-- runtime concerns that belong specifically to `anvil` or `smith`
+- runtime concerns that belong specifically to `anvil` or `smyth`
 
 ## Rationale
 
@@ -61,7 +61,7 @@ The following should stay out of `alloy`:
 
 - The project will need to manage coordination across three repositories instead of one.
 - Shared packages must be designed carefully so they remain useful common code rather than becoming a vague abstraction layer.
-- Versioning and release discipline for `alloy` will matter, because both `anvil` and `smith` will depend on it.
+- Versioning and release discipline for `alloy` will matter, because both `anvil` and `smyth` will depend on it.
 - There is some risk that `alloy` grows beyond schema concerns unless its scope is protected deliberately.
 
 ## Alternatives Considered
