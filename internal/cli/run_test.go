@@ -57,8 +57,6 @@ func TestRunUnknownCommand(t *testing.T) {
 }
 
 func TestRunReconcileDefaultsToCurrentDirectory(t *testing.T) {
-	t.Parallel()
-
 	restoreExecutePlan(t, func(ctx context.Context, plan reconcile.Plan) ([]string, error) {
 		return []string{"Reconciling GitHubRepository example-org/example-repo"}, nil
 	})
@@ -89,8 +87,6 @@ spec:
 }
 
 func TestRunReconcilePrintsDryRunMessages(t *testing.T) {
-	t.Parallel()
-
 	restoreExecutePlan(t, func(ctx context.Context, plan reconcile.Plan) ([]string, error) {
 		return []string{
 			"Reconciling GitHubRepository example-org/example-repo",
