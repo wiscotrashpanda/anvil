@@ -11,7 +11,7 @@ This repository is the public product repository for Anvil. It is intended to sh
 This is an active working repository. The README is intentionally lightweight and will evolve as the CLI, reconciler implementations, packaging, and workflows take shape.
 
 The repository now includes the first `anvil reconcile` path under `cmd/anvil`, `internal/cli`, and the manifest loading packages.
-Anvil is distributed both as downloadable release binaries and as a Docker image.
+Anvil is distributed as downloadable release binaries.
 The separate authoring CLI, `smyth`, is intended to live in its own repository, and shared manifest schema code now lives in the separate `alloy` Go module repository consumed by both tools.
 
 ## Core Principles
@@ -85,35 +85,18 @@ go build -o bin/anvil ./cmd/anvil
 ./bin/anvil reconcile --manifests ./examples/manifests
 ```
 
-Build Linux binaries for both common container targets with:
+Build Linux binaries for the currently supported release targets with:
 
 ```bash
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/anvil-linux-amd64 ./cmd/anvil
 CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o bin/anvil-linux-arm64 ./cmd/anvil
 ```
 
-Build the Docker image with:
-
-```bash
-docker build -t anvil:local .
-docker run --rm anvil:local
-```
-
-Build a specific Docker target platform locally with:
-
-```bash
-docker buildx build --platform linux/arm64 -t anvil:local --load .
-docker run --rm anvil:local
-```
-
 ## Distribution
 
-Anvil currently publishes two artifact types:
+Anvil currently publishes versioned GitHub Release binaries for direct CLI consumption.
 
-- GitHub Release binaries for direct CLI consumption
-- Docker images on Docker Hub for containerized execution
-
-The intended primary consumption path for downstream automation remains the versioned binary release, with `anvil` as the current runtime tool used in reconciliation workflows. The Docker images are retained as supported secondary distribution paths for portability and future flexibility.
+The intended primary consumption path for downstream automation remains the versioned binary release, with `anvil` as the current runtime tool used in reconciliation workflows. Docker images are intentionally deferred for now because they are straightforward to add later if containerized distribution becomes necessary.
 
 The tagged release workflow currently publishes `anvil` release archives only. Shared manifest schema code now lives in the separate `alloy` module so both `anvil` and `smyth` can depend on the same versioned manifest definitions.
 
@@ -134,5 +117,5 @@ All code and documentation committed to this repository are reviewed by the repo
 - `AGENTS.md` is the durable internal guidance file for the repository.
 - `README.md` is the public-facing working document and should stay concise.
 - As implementation lands, this file should be expanded with setup, usage, release, and workflow documentation.
-- GitHub Actions includes a build workflow that tests the CLI, compiles Linux binaries for `amd64` and `arm64`, and publishes a multi-architecture Docker image.
+- GitHub Actions includes a build workflow that tests the CLI and compiles Linux binaries for `amd64` and `arm64`.
 - GitHub Actions also includes a release workflow that builds tagged binary archives and publishes them to GitHub Releases.
