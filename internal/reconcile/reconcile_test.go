@@ -185,7 +185,7 @@ func TestPlanRunReconcilesRepositoryDrift(t *testing.T) {
 				{"property_name": "service", "value": "old-service"},
 				{"property_name": "legacy", "value": "remove-me"},
 			})
-		case r.Method == http.MethodPost && r.URL.Path == "/repos/example-org/example-repo/properties/values":
+		case r.Method == http.MethodPatch && r.URL.Path == "/repos/example-org/example-repo/properties/values":
 			decodeJSON(t, r, &updatePropertiesRequest)
 			return jsonResponse(http.StatusNoContent, nil)
 		case r.Method == http.MethodGet && r.URL.Path == "/repos/example-org/example-repo/branches" && strings.Contains(r.URL.RawQuery, "protected=true"):
@@ -281,6 +281,9 @@ func TestPlanRunReconcilesRepositoryDrift(t *testing.T) {
 	if patchRepositoryRequest["visibility"] != "private" {
 		t.Fatalf("expected repository patch to include visibility, got %#v", patchRepositoryRequest)
 	}
+	if securityAndAnalysis, ok := patchRepositoryRequest["security_and_analysis"]; ok && securityAndAnalysis != nil {
+		t.Fatalf("expected repository patch to omit security_and_analysis for public repos, got %#v", patchRepositoryRequest)
+	}
 	if patchRepositoryRequest["homepage"] != "https://example.com" {
 		t.Fatalf("expected repository patch to include homepage, got %#v", patchRepositoryRequest)
 	}
@@ -318,6 +321,190 @@ func TestPlanRunReconcilesRepositoryDrift(t *testing.T) {
 	}
 	if !reflect.DeepEqual(messages, expectedMessages) {
 		t.Fatalf("expected messages %v, got %v", expectedMessages, messages)
+	}
+}
+
+func TestBuildSecurityAndAnalysisUpdateIncludesAdvancedSecurityForPrivateRepos(t *testing.T) {
+	t.Parallel()
+
+	repository := &ghapi.Repository{
+		Visibility: "private",
+		SecurityAndAnalysis: &ghapi.SecurityAndAnalysis{
+			AdvancedSecurity: &ghapi.SecuritySetting{Status: "disabled"},
+		},
+	}
+
+	spec := manifestv1alpha1.GitHubRepositorySpec{
+		SecurityAndAnalysis: &manifestv1alpha1.GitHubRepositorySecurityAndAnalysisSpec{
+			AdvancedSecurity: &manifestv1alpha1.GitHubRepositorySecuritySettingSpec{Status: "enabled"},
+		},
+	}
+
+	update := buildSecurityAndAnalysisUpdate(repository, spec)
+	if update == nil || update.AdvancedSecurity == nil {
+		t.Fatalf("expected advanced security update for private repo, got %#v", update)
+	}
+	if update.AdvancedSecurity.Status != "enabled" {
+		t.Fatalf("expected advanced security status enabled, got %#v", update.AdvancedSecurity)
+	}
+}
+
+func TestBuildSecurityAndAnalysisUpdateOmitsAdvancedSecurityForPublicRepos(t *testing.T) {
+	t.Parallel()
+
+	repository := &ghapi.Repository{
+		Visibility: "public",
+		SecurityAndAnalysis: &ghapi.SecurityAndAnalysis{
+			AdvancedSecurity: &ghapi.SecuritySetting{Status: "disabled"},
+		},
+	}
+
+	spec := manifestv1alpha1.GitHubRepositorySpec{
+		SecurityAndAnalysis: &manifestv1alpha1.GitHubRepositorySecurityAndAnalysisSpec{
+			AdvancedSecurity: &manifestv1alpha1.GitHubRepositorySecuritySettingSpec{Status: "enabled"},
+		},
+	}
+
+	update := buildSecurityAndAnalysisUpdate(repository, spec)
+	if update != nil {
+		t.Fatalf("expected no advanced security update for public repo, got %#v", update)
+	}
+}
+
+func TestActorAllowanceStateToRequestUsesEmptyArrays(t *testing.T) {
+	t.Parallel()
+
+	request := actorAllowanceState{}.toRequest()
+
+	users, ok := request["users"].([]string)
+	if !ok {
+		t.Fatalf("expected users to be []string, got %#v", request["users"])
+	}
+	if users == nil || len(users) != 0 {
+		t.Fatalf("expected users to be an empty non-nil slice, got %#v", users)
+	}
+
+	teams, ok := request["teams"].([]string)
+	if !ok {
+		t.Fatalf("expected teams to be []string, got %#v", request["teams"])
+	}
+	if teams == nil || len(teams) != 0 {
+		t.Fatalf("expected teams to be an empty non-nil slice, got %#v", teams)
+	}
+
+	apps, ok := request["apps"].([]string)
+	if !ok {
+		t.Fatalf("expected apps to be []string, got %#v", request["apps"])
+	}
+	if apps == nil || len(apps) != 0 {
+		t.Fatalf("expected apps to be an empty non-nil slice, got %#v", apps)
+	}
+}
+
+func TestPlanRunReportsUnsupportedBranchProtectionClearly(t *testing.T) {
+	t.Parallel()
+
+	client := newTestClient(t, func(r *http.Request) *http.Response {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/repos/example-org/example-repo":
+			return jsonResponse(http.StatusOK, map[string]any{
+				"name":            "example-repo",
+				"full_name":       "example-org/example-repo",
+				"visibility":      "private",
+				"default_branch":  "main",
+				"owner":           map[string]any{"login": "example-org", "type": "Organization"},
+				"topics":          []string{},
+				"homepage":        "",
+				"has_issues":      true,
+				"has_projects":    true,
+				"has_wiki":        true,
+				"allow_squash_merge": true,
+				"allow_merge_commit": true,
+				"allow_rebase_merge": true,
+			})
+		case r.Method == http.MethodGet && r.URL.Path == "/repos/example-org/example-repo/branches" && strings.Contains(r.URL.RawQuery, "protected=true"):
+			return jsonResponse(http.StatusOK, []map[string]any{})
+		case r.Method == http.MethodGet && r.URL.Path == "/repos/example-org/example-repo/branches/main":
+			return jsonResponse(http.StatusOK, map[string]any{"name": "main"})
+		case r.Method == http.MethodGet && r.URL.Path == "/repos/example-org/example-repo/branches/main/protection":
+			return jsonResponse(http.StatusForbidden, map[string]any{"message": "Upgrade to GitHub Pro or make this repository public to enable this feature."})
+		default:
+			t.Fatalf("unexpected request: %s %s?%s", r.Method, r.URL.Path, r.URL.RawQuery)
+			return nil
+		}
+	})
+
+	spec := manifestv1alpha1.GitHubRepositorySpec{
+		Owner: "example-org",
+		Name:  "example-repo",
+		Branches: []manifestv1alpha1.GitHubRepositoryBranchSpec{
+			{
+				Name: "main",
+				Protection: &manifestv1alpha1.GitHubRepositoryBranchProtectionSpec{
+					EnforceAdmins: boolPtr(true),
+				},
+			},
+		},
+	}
+
+	_, err := newTestPlan(spec).Run(context.Background(), client)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "branch protection is unavailable for example-org/example-repo") {
+		t.Fatalf("expected clearer branch protection availability error, got %v", err)
+	}
+}
+
+func TestPlanRunReportsUnsupportedAdvancedSecurityClearly(t *testing.T) {
+	t.Parallel()
+
+	client := newTestClient(t, func(r *http.Request) *http.Response {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/repos/example-org/example-repo":
+			return jsonResponse(http.StatusOK, map[string]any{
+				"name":                    "example-repo",
+				"full_name":               "example-org/example-repo",
+				"visibility":              "private",
+				"default_branch":          "main",
+				"owner":                   map[string]any{"login": "example-org", "type": "Organization"},
+				"topics":                  []string{},
+				"homepage":                "",
+				"has_issues":              true,
+				"has_projects":            true,
+				"has_wiki":                true,
+				"allow_squash_merge":      true,
+				"allow_merge_commit":      true,
+				"allow_rebase_merge":      true,
+				"allow_auto_merge":        false,
+				"allow_update_branch":     false,
+				"delete_branch_on_merge":  false,
+				"security_and_analysis":   map[string]any{"advanced_security": map[string]any{"status": "disabled"}},
+			})
+		case r.Method == http.MethodPatch && r.URL.Path == "/repos/example-org/example-repo":
+			return jsonResponse(http.StatusUnprocessableEntity, map[string]any{"message": "Updating Advanced Security on this repository is not available, nor a pre-requisite for security features."})
+		default:
+			t.Fatalf("unexpected request: %s %s?%s", r.Method, r.URL.Path, r.URL.RawQuery)
+			return nil
+		}
+	})
+
+	spec := manifestv1alpha1.GitHubRepositorySpec{
+		Owner: "example-org",
+		Name:  "example-repo",
+		SecurityAndAnalysis: &manifestv1alpha1.GitHubRepositorySecurityAndAnalysisSpec{
+			AdvancedSecurity: &manifestv1alpha1.GitHubRepositorySecuritySettingSpec{Status: "enabled"},
+		},
+	}
+
+	_, err := newTestPlan(spec).Run(context.Background(), client)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "remove securityAndAnalysis.advancedSecurity from the manifest") {
+		t.Fatalf("expected clearer advanced security availability error, got %v", err)
 	}
 }
 

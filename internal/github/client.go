@@ -349,7 +349,7 @@ func (c *Client) GetCustomPropertyValues(ctx context.Context, owner string, repo
 
 func (c *Client) UpdateCustomPropertyValues(ctx context.Context, owner string, repo string, properties []CustomPropertyValue) error {
 	request := map[string]any{"properties": properties}
-	return c.request(ctx, http.MethodPost, fmt.Sprintf("/repos/%s/%s/properties/values", url.PathEscape(owner), url.PathEscape(repo)), request, nil, http.StatusNoContent)
+	return c.request(ctx, http.MethodPatch, fmt.Sprintf("/repos/%s/%s/properties/values", url.PathEscape(owner), url.PathEscape(repo)), request, nil, http.StatusNoContent)
 }
 
 func (c *Client) GetBranch(ctx context.Context, owner string, repo string, branch string) (*Branch, error) {
