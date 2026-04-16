@@ -78,6 +78,28 @@ export GITHUB_TOKEN=ghp_your_token_here
 go run ./cmd/anvil reconcile --manifests ./examples/manifests
 ```
 
+For first-pass local testing against a private repository, keep the manifest minimal and add optional GitHub features later. A safe starting point is:
+
+```yaml
+apiVersion: anvil.example.io/v1alpha1
+kind: GitHubRepository
+metadata:
+  name: example-repo
+spec:
+  owner: example-org
+  name: example-repo
+  visibility: private
+  description: Example GitHub repository manifest for local testing
+  autoInit: true
+```
+
+Features that commonly need extra GitHub setup or plan support:
+
+- `customProperties`: requires org-level custom property definitions to already exist.
+- `branches[].protection`: may be unavailable for private repositories depending on GitHub plan.
+- `securityAndAnalysis`: some settings are visibility-dependent, including GitHub's public-repo handling for Advanced Security.
+- `pages`: requires GitHub Pages support and compatible source settings for the repository.
+
 If you run the command from the manifests directory, `anvil reconcile` defaults to the current working directory:
 
 ```bash

@@ -3,6 +3,7 @@ package reconcile
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -199,7 +200,7 @@ func reconcileRepositorySettings(ctx context.Context, client *ghapi.Client, repo
 		}
 	}
 
-	if securityRequest := buildSecurityAndAnalysisUpdate(repository.SecurityAndAnalysis, spec.SecurityAndAnalysis); securityRequest != nil {
+	if securityRequest := buildSecurityAndAnalysisUpdate(repository, spec); securityRequest != nil {
 		request.SecurityAndAnalysis = securityRequest
 	}
 
@@ -209,6 +210,9 @@ func reconcileRepositorySettings(ctx context.Context, client *ghapi.Client, repo
 
 	updatedRepository, err := client.UpdateRepository(ctx, spec.Owner, spec.Name, request)
 	if err != nil {
+		if request.SecurityAndAnalysis != nil && request.SecurityAndAnalysis.AdvancedSecurity != nil && advancedSecurityUnsupported(err) {
+			return nil, false, fmt.Errorf("advanced security cannot be managed for %s/%s in its current GitHub security product or license state: remove securityAndAnalysis.advancedSecurity from the manifest or use a repository where GitHub Advanced Security is available: %w", spec.Owner, spec.Name, err)
+		}
 		return nil, false, err
 	}
 
@@ -340,6 +344,9 @@ func reconcileBranches(ctx context.Context, client *ghapi.Client, repository *gh
 
 	protectedBranches, err := client.ListProtectedBranches(ctx, spec.Owner, spec.Name)
 	if err != nil {
+		if branchProtectionUnsupported(err) {
+			return nil, false, fmt.Errorf("branch protection is unavailable for %s/%s on the current GitHub plan or repository visibility: make the repository public, upgrade the plan, or remove branch protection from the manifest: %w", spec.Owner, spec.Name, err)
+		}
 		return nil, false, err
 	}
 
@@ -363,6 +370,9 @@ func reconcileBranches(ctx context.Context, client *ghapi.Client, repository *gh
 
 		currentProtection, err := client.GetBranchProtection(ctx, spec.Owner, spec.Name, branch.Name)
 		if err != nil && !ghapi.IsNotFound(err) {
+			if branchProtectionUnsupported(err) {
+				return messages, changed, fmt.Errorf("branch protection is unavailable for %s/%s on the current GitHub plan or repository visibility: make the repository public, upgrade the plan, or remove branch protection from the manifest: %w", spec.Owner, spec.Name, err)
+			}
 			return messages, changed, fmt.Errorf("get protection for branch %s: %w", branch.Name, err)
 		}
 		if ghapi.IsNotFound(err) {
@@ -372,6 +382,9 @@ func reconcileBranches(ctx context.Context, client *ghapi.Client, repository *gh
 		if branch.Protection == nil {
 			if _, ok := protectedSet[branch.Name]; ok {
 				if err := client.DeleteBranchProtection(ctx, spec.Owner, spec.Name, branch.Name); err != nil {
+					if branchProtectionUnsupported(err) {
+						return messages, changed, fmt.Errorf("branch protection is unavailable for %s/%s on the current GitHub plan or repository visibility: make the repository public, upgrade the plan, or remove branch protection from the manifest: %w", spec.Owner, spec.Name, err)
+					}
 					return messages, changed, fmt.Errorf("delete protection for branch %s: %w", branch.Name, err)
 				}
 				delete(protectedSet, branch.Name)
@@ -400,9 +413,12 @@ func reconcileBranches(ctx context.Context, client *ghapi.Client, repository *gh
 			continue
 		}
 
-		if err := client.UpdateBranchProtection(ctx, spec.Owner, spec.Name, branch.Name, desiredState.toRequest()); err != nil {
-			return messages, changed, fmt.Errorf("update protection for branch %s: %w", branch.Name, err)
-		}
+			if err := client.UpdateBranchProtection(ctx, spec.Owner, spec.Name, branch.Name, desiredState.toRequest()); err != nil {
+				if branchProtectionUnsupported(err) {
+					return messages, changed, fmt.Errorf("branch protection is unavailable for %s/%s on the current GitHub plan or repository visibility: make the repository public, upgrade the plan, or remove branch protection from the manifest: %w", spec.Owner, spec.Name, err)
+				}
+				return messages, changed, fmt.Errorf("update protection for branch %s: %w", branch.Name, err)
+			}
 
 		delete(protectedSet, branch.Name)
 		changed = true
@@ -420,6 +436,9 @@ func reconcileBranches(ctx context.Context, client *ghapi.Client, repository *gh
 
 	for _, branchName := range extraProtectedBranches {
 		if err := client.DeleteBranchProtection(ctx, spec.Owner, spec.Name, branchName); err != nil {
+			if branchProtectionUnsupported(err) {
+				return messages, changed, fmt.Errorf("branch protection is unavailable for %s/%s on the current GitHub plan or repository visibility: make the repository public, upgrade the plan, or remove branch protection from the manifest: %w", spec.Owner, spec.Name, err)
+			}
 			return messages, changed, fmt.Errorf("delete protection for branch %s: %w", branchName, err)
 		}
 
@@ -430,13 +449,41 @@ func reconcileBranches(ctx context.Context, client *ghapi.Client, repository *gh
 	return messages, changed, nil
 }
 
-func buildSecurityAndAnalysisUpdate(current *ghapi.SecurityAndAnalysis, desired *manifestv1alpha1.GitHubRepositorySecurityAndAnalysisSpec) *ghapi.SecurityAndAnalysis {
-	if desired == nil {
+func branchProtectionUnsupported(err error) bool {
+	var apiErr *ghapi.APIError
+	if !errors.As(err, &apiErr) || apiErr.StatusCode != 403 {
+		return false
+	}
+
+	message := strings.ToLower(apiErr.Message)
+	return strings.Contains(message, "make this repository public to enable this feature") ||
+		(strings.Contains(message, "upgrade to github pro") && strings.Contains(message, "enable this feature"))
+}
+
+func advancedSecurityUnsupported(err error) bool {
+	var apiErr *ghapi.APIError
+	if !errors.As(err, &apiErr) || apiErr.StatusCode != 422 {
+		return false
+	}
+
+	message := strings.ToLower(apiErr.Message)
+	return strings.Contains(message, "updating advanced security on this repository is not available") &&
+		strings.Contains(message, "pre-requisite for security features")
+}
+
+func buildSecurityAndAnalysisUpdate(repository *ghapi.Repository, spec manifestv1alpha1.GitHubRepositorySpec) *ghapi.SecurityAndAnalysis {
+	if spec.SecurityAndAnalysis == nil {
 		return nil
 	}
 
+	current := repository.SecurityAndAnalysis
+	desired := spec.SecurityAndAnalysis
 	update := &ghapi.SecurityAndAnalysis{}
 	changed := false
+	skipAdvancedSecurity := repositoryVisibility(repository) == "public"
+	if spec.Visibility != nil && strings.EqualFold(dereferenceString(spec.Visibility), "public") {
+		skipAdvancedSecurity = true
+	}
 
 	compareAndSetSecuritySetting := func(currentSetting *ghapi.SecuritySetting, desiredSetting *manifestv1alpha1.GitHubRepositorySecuritySettingSpec, target **ghapi.SecuritySetting) {
 		if desiredSetting == nil {
@@ -450,7 +497,9 @@ func buildSecurityAndAnalysisUpdate(current *ghapi.SecurityAndAnalysis, desired 
 		changed = true
 	}
 
-	compareAndSetSecuritySetting(currentSecurity(current, func(settings *ghapi.SecurityAndAnalysis) *ghapi.SecuritySetting { return settings.AdvancedSecurity }), desired.AdvancedSecurity, &update.AdvancedSecurity)
+	if !skipAdvancedSecurity {
+		compareAndSetSecuritySetting(currentSecurity(current, func(settings *ghapi.SecurityAndAnalysis) *ghapi.SecuritySetting { return settings.AdvancedSecurity }), desired.AdvancedSecurity, &update.AdvancedSecurity)
+	}
 	compareAndSetSecuritySetting(currentSecurity(current, func(settings *ghapi.SecurityAndAnalysis) *ghapi.SecuritySetting { return settings.CodeSecurity }), desired.CodeSecurity, &update.CodeSecurity)
 	compareAndSetSecuritySetting(currentSecurity(current, func(settings *ghapi.SecurityAndAnalysis) *ghapi.SecuritySetting { return settings.SecretScanning }), desired.SecretScanning, &update.SecretScanning)
 	compareAndSetSecuritySetting(currentSecurity(current, func(settings *ghapi.SecurityAndAnalysis) *ghapi.SecuritySetting {
@@ -474,6 +523,10 @@ func buildSecurityAndAnalysisUpdate(current *ghapi.SecurityAndAnalysis, desired 
 	}
 
 	return update
+}
+
+func repositoryVisibility(repository *ghapi.Repository) string {
+	return strings.ToLower(repository.Visibility)
 }
 
 type pagesState struct {
@@ -638,10 +691,17 @@ func (s actorAllowanceState) isEmpty() bool {
 }
 
 func (s actorAllowanceState) toRequest() map[string]any {
+	users := make([]string, len(s.Users))
+	copy(users, s.Users)
+	teams := make([]string, len(s.Teams))
+	copy(teams, s.Teams)
+	apps := make([]string, len(s.Apps))
+	copy(apps, s.Apps)
+
 	return map[string]any{
-		"users": append([]string(nil), s.Users...),
-		"teams": append([]string(nil), s.Teams...),
-		"apps":  append([]string(nil), s.Apps...),
+		"users": users,
+		"teams": teams,
+		"apps":  apps,
 	}
 }
 
