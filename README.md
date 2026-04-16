@@ -71,9 +71,10 @@ Run the CLI help locally with:
 go run ./cmd/anvil --help
 ```
 
-Run the current dry-run reconcile path against the public example manifests with:
+Run the reconcile path against the public example manifests with a GitHub token in the environment:
 
 ```bash
+export GITHUB_TOKEN=ghp_your_token_here
 go run ./cmd/anvil reconcile --manifests ./examples/manifests
 ```
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -8,6 +9,15 @@ import (
 
 	"github.com/emkaytec/anvil/internal/reconcile"
 )
+
+var executePlan = func(ctx context.Context, plan reconcile.Plan) ([]string, error) {
+	client, err := reconcile.NewGitHubClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return plan.Run(ctx, client)
+}
 
 const helpText = `Hello from Anvil.
 
@@ -87,7 +97,12 @@ func runReconcileWithWorkingDir(args []string, stdout io.Writer, getwd func() (s
 		return err
 	}
 
-	for _, message := range plan.Messages() {
+	clientMessages, err := executePlan(context.Background(), plan)
+	if err != nil {
+		return err
+	}
+
+	for _, message := range clientMessages {
 		if _, err := fmt.Fprintln(stdout, message); err != nil {
 			return err
 		}

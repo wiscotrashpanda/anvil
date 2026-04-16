@@ -2,10 +2,13 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/emkaytec/anvil/internal/reconcile"
 )
 
 func TestRunHelp(t *testing.T) {
@@ -54,7 +57,9 @@ func TestRunUnknownCommand(t *testing.T) {
 }
 
 func TestRunReconcileDefaultsToCurrentDirectory(t *testing.T) {
-	t.Parallel()
+	restoreExecutePlan(t, func(ctx context.Context, plan reconcile.Plan) ([]string, error) {
+		return []string{"Reconciling GitHubRepository example-org/example-repo"}, nil
+	})
 
 	root := t.TempDir()
 	writeCLIFile(t, filepath.Join(root, "nested", "repo.yaml"), `apiVersion: anvil.example.io/v1alpha1
@@ -82,7 +87,12 @@ spec:
 }
 
 func TestRunReconcilePrintsDryRunMessages(t *testing.T) {
-	t.Parallel()
+	restoreExecutePlan(t, func(ctx context.Context, plan reconcile.Plan) ([]string, error) {
+		return []string{
+			"Reconciling GitHubRepository example-org/example-repo",
+			"GitHubRepository example-org/example-repo is up to date",
+		}, nil
+	})
 
 	root := t.TempDir()
 	writeCLIFile(t, filepath.Join(root, "nested", "repo.yaml"), `apiVersion: anvil.example.io/v1alpha1
@@ -106,8 +116,8 @@ spec:
 		t.Fatalf("expected reconcile output to contain repository message, got %q", output)
 	}
 
-	if !strings.Contains(output, "Dry run only: no external changes applied") {
-		t.Fatalf("expected reconcile output to contain dry-run message, got %q", output)
+	if !strings.Contains(output, "GitHubRepository example-org/example-repo is up to date") {
+		t.Fatalf("expected reconcile output to contain reconciliation result, got %q", output)
 	}
 }
 
@@ -141,4 +151,14 @@ func writeCLIFile(t *testing.T, path string, contents string) {
 	if err := os.WriteFile(path, []byte(contents), 0o644); err != nil {
 		t.Fatalf("WriteFile(%q) returned error: %v", path, err)
 	}
+}
+
+func restoreExecutePlan(t *testing.T, replacement func(context.Context, reconcile.Plan) ([]string, error)) {
+	t.Helper()
+
+	previous := executePlan
+	executePlan = replacement
+	t.Cleanup(func() {
+		executePlan = previous
+	})
 }
