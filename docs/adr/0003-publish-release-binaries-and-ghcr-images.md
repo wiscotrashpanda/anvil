@@ -16,7 +16,7 @@ The project therefore needed to decide whether to keep distribution binary-only 
 Anvil will publish both:
 
 - versioned release binaries through GitHub Releases
-- container images through GitHub Container Registry (`ghcr.io`)
+- private container images through GitHub Container Registry (`ghcr.io`)
 
 The binary release path is the primary distribution path for CI/CD consumption. The Docker image remains a supported secondary distribution option for portability and container-based execution.
 

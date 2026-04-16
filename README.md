@@ -111,11 +111,11 @@ docker run --rm anvil:local
 Anvil currently publishes two artifact types:
 
 - GitHub Release binaries for direct CLI consumption
-- Docker images through GitHub Container Registry for containerized execution
+- Private Docker images through GitHub Container Registry for containerized execution
 
 The intended primary consumption path for downstream automation remains the versioned binary release, with `anvil` as the current runtime tool used in reconciliation workflows. The Docker image remains a supported secondary distribution path for portability and container-based execution.
 
-The tagged release workflow currently publishes `anvil` release archives, and the build workflow publishes a multi-architecture image to GitHub Container Registry. Shared manifest schema code now lives in the separate `alloy` module so both `anvil` and `smyth` can depend on the same versioned manifest definitions.
+The tagged release workflow currently publishes `anvil` release archives, and the build workflow publishes a multi-architecture image to GitHub Container Registry at `ghcr.io/emkaytec/anvil`. Shared manifest schema code now lives in the separate `alloy` module so both `anvil` and `smyth` can depend on the same versioned manifest definitions.
 
 ## Architecture Decisions
 
