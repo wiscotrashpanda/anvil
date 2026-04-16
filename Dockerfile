@@ -16,6 +16,8 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /out/anvil ./cmd
 
 FROM gcr.io/distroless/static-debian12
 
+LABEL org.opencontainers.image.source="https://github.com/emkaytec/anvil"
+
 COPY --from=builder /out/anvil /usr/local/bin/anvil
 
 ENTRYPOINT ["/usr/local/bin/anvil"]
