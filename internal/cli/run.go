@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/emkaytec/anvil/internal/reconcile"
 )
@@ -23,10 +24,10 @@ Available Commands:
 const reconcileHelpText = `Reconcile manifests from a directory.
 
 Usage:
-  anvil reconcile --manifests <path>
+  anvil reconcile [--manifests <path>]
 
 Flags:
-  --manifests string   Path to a directory containing YAML manifests
+  --manifests string   Path to a directory containing YAML manifests (defaults to current directory)
 `
 
 // Run executes the CLI against the provided arguments.
@@ -48,6 +49,10 @@ func Run(args []string, stdout io.Writer) error {
 }
 
 func runReconcile(args []string, stdout io.Writer) error {
+	return runReconcileWithWorkingDir(args, stdout, os.Getwd)
+}
+
+func runReconcileWithWorkingDir(args []string, stdout io.Writer, getwd func() (string, error)) error {
 	for _, arg := range args {
 		if arg == "help" || arg == "--help" || arg == "-h" {
 			_, err := fmt.Fprint(stdout, reconcileHelpText)
@@ -69,7 +74,12 @@ func runReconcile(args []string, stdout io.Writer) error {
 	}
 
 	if *manifestsPath == "" {
-		return fmt.Errorf("reconcile requires --manifests <path>")
+		cwd, err := getwd()
+		if err != nil {
+			return fmt.Errorf("resolve current working directory: %w", err)
+		}
+
+		*manifestsPath = cwd
 	}
 
 	plan, err := reconcile.Load(*manifestsPath)

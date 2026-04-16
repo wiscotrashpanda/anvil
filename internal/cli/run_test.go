@@ -53,18 +53,31 @@ func TestRunUnknownCommand(t *testing.T) {
 	}
 }
 
-func TestRunReconcileRequiresManifestsFlag(t *testing.T) {
+func TestRunReconcileDefaultsToCurrentDirectory(t *testing.T) {
 	t.Parallel()
+
+	root := t.TempDir()
+	writeCLIFile(t, filepath.Join(root, "nested", "repo.yaml"), `apiVersion: anvil.example.io/v1alpha1
+kind: GitHubRepository
+metadata:
+  name: example-repo
+spec:
+  owner: example-org
+  name: example-repo
+`)
 
 	var stdout bytes.Buffer
 
-	err := Run([]string{"reconcile"}, &stdout)
-	if err == nil {
-		t.Fatal("expected missing manifests flag error")
+	err := runReconcileWithWorkingDir([]string{}, &stdout, func() (string, error) {
+		return root, nil
+	})
+	if err != nil {
+		t.Fatalf("runReconcileWithWorkingDir returned error: %v", err)
 	}
 
-	if !strings.Contains(err.Error(), "reconcile requires --manifests <path>") {
-		t.Fatalf("expected missing manifests flag error, got %v", err)
+	output := stdout.String()
+	if !strings.Contains(output, "Reconciling GitHubRepository example-org/example-repo") {
+		t.Fatalf("expected reconcile output to contain repository message, got %q", output)
 	}
 }
 
@@ -95,6 +108,26 @@ spec:
 
 	if !strings.Contains(output, "Dry run only: no external changes applied") {
 		t.Fatalf("expected reconcile output to contain dry-run message, got %q", output)
+	}
+}
+
+func TestRunReconcileHelpDescribesDefaultDirectory(t *testing.T) {
+	t.Parallel()
+
+	var stdout bytes.Buffer
+
+	err := Run([]string{"reconcile", "--help"}, &stdout)
+	if err != nil {
+		t.Fatalf("Run(reconcile --help) returned error: %v", err)
+	}
+
+	output := stdout.String()
+	if !strings.Contains(output, "anvil reconcile [--manifests <path>]") {
+		t.Fatalf("expected reconcile help usage to show optional manifests flag, got %q", output)
+	}
+
+	if !strings.Contains(output, "defaults to current directory") {
+		t.Fatalf("expected reconcile help to mention current directory default, got %q", output)
 	}
 }
 

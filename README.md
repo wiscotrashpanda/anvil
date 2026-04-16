@@ -77,6 +77,13 @@ Run the current dry-run reconcile path against the public example manifests with
 go run ./cmd/anvil reconcile --manifests ./examples/manifests
 ```
 
+If you run the command from the manifests directory, `anvil reconcile` defaults to the current working directory:
+
+```bash
+cd ./examples/manifests
+go run ../../cmd/anvil reconcile
+```
+
 Build a local binary with:
 
 ```bash
