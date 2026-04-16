@@ -54,6 +54,15 @@ This repository is intended to remain public.
 - Public examples must never include real organization names, repository names, account IDs, credentials, or operational values.
 - Real environment-specific manifests belong in separate implementation repositories.
 
+## Shared Code Boundary
+
+Anvil should keep reconciliation-specific runtime code in this repository and pull shared manifest/schema code from the separate `alloy` project.
+
+- Common manifest structs, schema versions, kind constants, and schema-oriented validation should be added to `alloy`, not redefined locally in `anvil`.
+- When Anvil needs new shared types or schema changes, update `alloy` first, then load the new version into this project through the Go module dependency.
+- Avoid recreating a local shared `pkg` tree in this repository as a convenience shortcut; `alloy` is the source of truth for shared code.
+- Keep `anvil` focused on manifest loading, reconciliation planning, and provider-specific runtime behavior rather than ownership of common schema packages.
+
 ## Working Style
 
 - Keep durable project guidance in this file rather than introducing a spec system by default.

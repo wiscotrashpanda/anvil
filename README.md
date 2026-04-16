@@ -12,7 +12,7 @@ This is an active working repository. The README is intentionally lightweight an
 
 The repository now includes the first `anvil reconcile` path under `cmd/anvil`, `internal/cli`, and the manifest loading packages.
 Anvil is distributed both as downloadable release binaries and as a Docker image.
-The separate authoring CLI, `smith`, is intended to live in its own repository, and shared manifest schema code now lives in the separate `alloy` Go module repository consumed by both tools.
+The separate authoring CLI, `smyth`, is intended to live in its own repository, and shared manifest schema code now lives in the separate `alloy` Go module repository consumed by both tools.
 
 ## Core Principles
 
@@ -115,7 +115,7 @@ Anvil currently publishes two artifact types:
 
 The intended primary consumption path for downstream automation remains the versioned binary release, with `anvil` as the current runtime tool used in reconciliation workflows. The Docker images are retained as supported secondary distribution paths for portability and future flexibility.
 
-The tagged release workflow currently publishes `anvil` release archives only. Shared manifest schema code now lives in the separate `alloy` module so both `anvil` and `smith` can depend on the same versioned manifest definitions.
+The tagged release workflow currently publishes `anvil` release archives only. Shared manifest schema code now lives in the separate `alloy` module so both `anvil` and `smyth` can depend on the same versioned manifest definitions.
 
 ## Architecture Decisions
 
