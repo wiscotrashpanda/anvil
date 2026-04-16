@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/wiscotrashpanda/anvil/internal/cli"
+	"github.com/emkaytec/anvil/internal/cli"
 )
 
 func main() {

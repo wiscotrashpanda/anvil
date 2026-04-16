@@ -61,7 +61,7 @@ This repository remains public by design.
 
 ## Example Manifests
 
-Example manifests live in [examples/manifests](/Volumes/Bolt/Code/wiscotrashpanda/anvil/examples/manifests/README.md).
+Example manifests live in [examples/manifests](/Volumes/Bolt/Code/emkaytec/anvil/examples/manifests/README.md).
 
 ## Local Development
 
@@ -119,7 +119,7 @@ The tagged release workflow currently publishes `anvil` release archives, and th
 
 ## Architecture Decisions
 
-Strategic and architectural decisions are tracked as ADRs under [docs/adr](/Volumes/Bolt/Code/wiscotrashpanda/anvil/docs/adr/README.md).
+Strategic and architectural decisions are tracked as ADRs under [docs/adr](/Volumes/Bolt/Code/emkaytec/anvil/docs/adr/README.md).
 
 ## AI-Assisted Development
 

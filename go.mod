@@ -1,7 +1,7 @@
-module github.com/wiscotrashpanda/anvil
+module github.com/emkaytec/anvil
 
 go 1.26
 
 require gopkg.in/yaml.v3 v3.0.1
 
-require github.com/wiscotrashpanda/alloy v0.1.0
+require github.com/emkaytec/alloy v0.2.0
