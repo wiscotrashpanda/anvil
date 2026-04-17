@@ -31,9 +31,29 @@ spec:
 
 Add optional features only after the base reconcile works for the target repository.
 
-Common GitHub prerequisites for optional features:
+Common GitHub notes for the currently supported example surface:
 
-- `customProperties` requires the custom property to already exist in the owning organization's GitHub custom property schema.
-- `branches[].protection` may be unavailable for private repositories on plans that do not include private branch protection.
-- `securityAndAnalysis.advancedSecurity` should be omitted for public repositories because GitHub treats it as already available there.
-- `pages` requires GitHub Pages support to be available for the repository and branch/source settings you declare.
+- `topics` are supported, but it is still easier to start with a minimal repository manifest and add them after the base create/update flow works.
+
+For local testing against HCP Terraform, start with a small `HCPTerraformWorkspace` manifest and add tags, variables, remote-state consumers, and variable-set assignments after the base workspace reconcile works:
+
+```yaml
+apiVersion: anvil.example.io/v1alpha1
+kind: HCPTerraformWorkspace
+metadata:
+  name: example-workspace
+spec:
+  organization: example-org
+  name: example-workspace
+  projectID: prj-123456
+  description: Example HCP Terraform workspace manifest for local testing
+  terraformVersion: 1.14.8
+  executionMode: remote
+```
+
+The current HCP Terraform reconciler intentionally does not manage these fields yet:
+
+- `sshKeyID`
+- `runTriggers`
+- `teamAccess`
+- `notifications`

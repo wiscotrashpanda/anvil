@@ -30,8 +30,9 @@ The v1 direction is a manifest-driven reconciliation CLI with explicit reconcile
 Current public example support:
 
 - `GitHubRepository`
+- `HCPTerraformWorkspace`
 
-Possible future kinds may include `AwsProvisionerRole` and `TerraformWorkspace`, but they are not part of the foundational v1 definition.
+Possible future kinds may include `AwsProvisionerRole` and deeper HCP Terraform-adjacent surfaces, but they are not part of the foundational v1 definition.
 
 ## Non-Goals
 
@@ -71,10 +72,11 @@ Run the CLI help locally with:
 go run ./cmd/anvil --help
 ```
 
-Run the reconcile path against the public example manifests with a GitHub token in the environment:
+Run the reconcile path against the public example manifests with the token required for the kinds you are reconciling:
 
 ```bash
 export GITHUB_TOKEN=ghp_your_token_here
+export TF_TOKEN_app_terraform_io=tfc_your_token_here
 go run ./cmd/anvil reconcile --manifests ./examples/manifests
 ```
 
@@ -95,10 +97,38 @@ spec:
 
 Features that commonly need extra GitHub setup or plan support:
 
-- `customProperties`: requires org-level custom property definitions to already exist.
-- `branches[].protection`: may be unavailable for private repositories depending on GitHub plan.
-- `securityAndAnalysis`: some settings are visibility-dependent, including GitHub's public-repo handling for Advanced Security.
-- `pages`: requires GitHub Pages support and compatible source settings for the repository.
+- `topics`: manage these after the base repository create/update flow is working.
+
+For first-pass local testing against HCP Terraform, keep the workspace manifest focused on the core workspace settings and workspace variables first. A safe starting point is:
+
+```yaml
+apiVersion: anvil.example.io/v1alpha1
+kind: HCPTerraformWorkspace
+metadata:
+  name: example-workspace
+spec:
+  organization: example-org
+  name: example-workspace
+  projectID: prj-123456
+  description: Example HCP Terraform workspace manifest for local testing
+  terraformVersion: 1.14.8
+  executionMode: remote
+```
+
+HCP Terraform surfaces currently supported by `anvil`:
+
+- core workspace settings such as project, execution mode, Terraform version, working directory, run behavior flags, VCS repo settings, trigger patterns and trigger prefixes
+- workspace tags and key/value tag bindings
+- remote state consumer assignments
+- workspace variables
+- variable set assignments
+
+HCP Terraform surfaces not yet reconciled by `anvil`:
+
+- `sshKeyID`
+- `runTriggers`
+- `teamAccess`
+- `notifications`
 
 If you run the command from the manifests directory, `anvil reconcile` defaults to the current working directory:
 

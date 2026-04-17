@@ -7,16 +7,31 @@ import (
 	"io"
 	"os"
 
+	ghapi "github.com/emkaytec/anvil/internal/github"
+	hcpapi "github.com/emkaytec/anvil/internal/hcpterraform"
 	"github.com/emkaytec/anvil/internal/reconcile"
 )
 
 var executePlan = func(ctx context.Context, plan reconcile.Plan) ([]string, error) {
-	client, err := reconcile.NewGitHubClient()
-	if err != nil {
-		return nil, err
+	var githubClient *ghapi.Client
+	if plan.HasGitHubRepositories() {
+		client, err := reconcile.NewGitHubClient()
+		if err != nil {
+			return nil, err
+		}
+		githubClient = client
 	}
 
-	return plan.Run(ctx, client)
+	var hcpTerraformClient *hcpapi.Client
+	if plan.HasHCPTerraformWorkspaces() {
+		client, err := reconcile.NewHCPTerraformClient()
+		if err != nil {
+			return nil, err
+		}
+		hcpTerraformClient = client
+	}
+
+	return plan.Run(ctx, githubClient, hcpTerraformClient)
 }
 
 const helpText = `Hello from Anvil.

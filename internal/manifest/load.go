@@ -17,8 +17,14 @@ type LoadedGitHubRepositoryManifest struct {
 	Manifest manifestv1alpha1.GitHubRepositoryManifest
 }
 
+type LoadedHCPTerraformWorkspaceManifest struct {
+	Path     string
+	Manifest manifestv1alpha1.HCPTerraformWorkspaceManifest
+}
+
 type Result struct {
-	GitHubRepositories []LoadedGitHubRepositoryManifest
+	GitHubRepositories     []LoadedGitHubRepositoryManifest
+	HCPTerraformWorkspaces []LoadedHCPTerraformWorkspaceManifest
 }
 
 func LoadDir(path string) (Result, error) {
@@ -58,61 +64,96 @@ func LoadDir(path string) (Result, error) {
 	var result Result
 
 	for _, manifestPath := range manifestPaths {
-		repository, err := loadGitHubRepositoryManifest(manifestPath)
+		envelope, err := loadManifestEnvelope(manifestPath)
 		if err != nil {
 			return Result{}, err
 		}
 
-		result.GitHubRepositories = append(result.GitHubRepositories, repository)
+		switch envelope.Kind {
+		case manifestv1alpha1.KindGitHubRepository:
+			repository, err := decodeGitHubRepositoryManifest(manifestPath, envelope)
+			if err != nil {
+				return Result{}, err
+			}
+
+			result.GitHubRepositories = append(result.GitHubRepositories, repository)
+		case manifestv1alpha1.KindHCPTerraformWorkspace:
+			workspace, err := decodeHCPTerraformWorkspaceManifest(manifestPath, envelope)
+			if err != nil {
+				return Result{}, err
+			}
+
+			result.HCPTerraformWorkspaces = append(result.HCPTerraformWorkspaces, workspace)
+		default:
+			return Result{}, fmt.Errorf("manifest %q has unsupported kind %q", manifestPath, envelope.Kind)
+		}
 	}
 
 	return result, nil
 }
 
-func loadGitHubRepositoryManifest(path string) (LoadedGitHubRepositoryManifest, error) {
+func loadManifestEnvelope(path string) (manifestv1alpha1.Envelope, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("read manifest %q: %w", path, err)
+		return manifestv1alpha1.Envelope{}, fmt.Errorf("read manifest %q: %w", path, err)
 	}
 
 	var envelope manifestv1alpha1.Envelope
 	if err := yaml.Unmarshal(data, &envelope); err != nil {
-		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("parse manifest %q: %w", path, err)
+		return manifestv1alpha1.Envelope{}, fmt.Errorf("parse manifest %q: %w", path, err)
 	}
 
 	if envelope.APIVersion == "" {
-		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing apiVersion", path)
+		return manifestv1alpha1.Envelope{}, fmt.Errorf("manifest %q missing apiVersion", path)
 	}
 
 	if envelope.Kind == "" {
-		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing kind", path)
+		return manifestv1alpha1.Envelope{}, fmt.Errorf("manifest %q missing kind", path)
 	}
 
 	if envelope.Metadata.Name == "" {
-		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q missing metadata.name", path)
+		return manifestv1alpha1.Envelope{}, fmt.Errorf("manifest %q missing metadata.name", path)
 	}
 
-	switch envelope.Kind {
-	case manifestv1alpha1.KindGitHubRepository:
-		var spec manifestv1alpha1.GitHubRepositorySpec
-		if err := envelope.Spec.Decode(&spec); err != nil {
-			return LoadedGitHubRepositoryManifest{}, fmt.Errorf("decode GitHubRepository spec in %q: %w", path, err)
-		}
+	return envelope, nil
+}
 
-		manifest := manifestv1alpha1.NewGitHubRepositoryManifest(envelope.Metadata, spec)
-		manifest.APIVersion = envelope.APIVersion
-
-		if err := manifest.Validate(); err != nil {
-			return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q %w", path, err)
-		}
-
-		return LoadedGitHubRepositoryManifest{
-			Path:     path,
-			Manifest: manifest,
-		}, nil
-	default:
-		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q has unsupported kind %q", path, envelope.Kind)
+func decodeGitHubRepositoryManifest(path string, envelope manifestv1alpha1.Envelope) (LoadedGitHubRepositoryManifest, error) {
+	var spec manifestv1alpha1.GitHubRepositorySpec
+	if err := envelope.Spec.Decode(&spec); err != nil {
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("decode GitHubRepository spec in %q: %w", path, err)
 	}
+
+	manifest := manifestv1alpha1.NewGitHubRepositoryManifest(envelope.Metadata, spec)
+	manifest.APIVersion = envelope.APIVersion
+
+	if err := manifest.Validate(); err != nil {
+		return LoadedGitHubRepositoryManifest{}, fmt.Errorf("manifest %q %w", path, err)
+	}
+
+	return LoadedGitHubRepositoryManifest{
+		Path:     path,
+		Manifest: manifest,
+	}, nil
+}
+
+func decodeHCPTerraformWorkspaceManifest(path string, envelope manifestv1alpha1.Envelope) (LoadedHCPTerraformWorkspaceManifest, error) {
+	var spec manifestv1alpha1.HCPTerraformWorkspaceSpec
+	if err := envelope.Spec.Decode(&spec); err != nil {
+		return LoadedHCPTerraformWorkspaceManifest{}, fmt.Errorf("decode HCPTerraformWorkspace spec in %q: %w", path, err)
+	}
+
+	manifest := manifestv1alpha1.NewHCPTerraformWorkspaceManifest(envelope.Metadata, spec)
+	manifest.APIVersion = envelope.APIVersion
+
+	if err := manifest.Validate(); err != nil {
+		return LoadedHCPTerraformWorkspaceManifest{}, fmt.Errorf("manifest %q %w", path, err)
+	}
+
+	return LoadedHCPTerraformWorkspaceManifest{
+		Path:     path,
+		Manifest: manifest,
+	}, nil
 }
 
 func isYAMLFile(name string) bool {

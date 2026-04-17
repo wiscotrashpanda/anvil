@@ -39,6 +39,38 @@ spec:
 	}
 }
 
+func TestLoadDirRecursivelyLoadsHCPTerraformWorkspaceManifests(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	writeTestFile(t, filepath.Join(root, "nested", "workspace.yaml"), `apiVersion: anvil.example.io/v1alpha1
+kind: HCPTerraformWorkspace
+metadata:
+  name: example-workspace
+spec:
+  organization: example-org
+  name: example-workspace
+`)
+
+	result, err := LoadDir(root)
+	if err != nil {
+		t.Fatalf("LoadDir returned error: %v", err)
+	}
+
+	if len(result.HCPTerraformWorkspaces) != 1 {
+		t.Fatalf("expected 1 HCPTerraformWorkspace, got %d", len(result.HCPTerraformWorkspaces))
+	}
+
+	workspace := result.HCPTerraformWorkspaces[0]
+	if workspace.Manifest.Metadata.Name != "example-workspace" {
+		t.Fatalf("expected metadata.name to be example-workspace, got %q", workspace.Manifest.Metadata.Name)
+	}
+
+	if workspace.Manifest.Spec.Organization != "example-org" {
+		t.Fatalf("expected spec.organization to be example-org, got %q", workspace.Manifest.Spec.Organization)
+	}
+}
+
 func TestLoadDirRejectsUnsupportedKind(t *testing.T) {
 	t.Parallel()
 

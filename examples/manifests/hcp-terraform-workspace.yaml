@@ -1,0 +1,36 @@
+apiVersion: anvil.example.io/v1alpha1
+kind: HCPTerraformWorkspace
+metadata:
+  name: example-workspace
+spec:
+  organization: example-org
+  name: example-workspace
+  projectID: prj-123456
+  description: Example HCP Terraform workspace manifest for public documentation
+  terraformVersion: 1.14.8
+  workingDirectory: terraform
+  executionMode: remote
+  fileTriggersEnabled: true
+  speculativeEnabled: true
+  tags:
+    - platform
+    - example
+  tagBindings:
+    - key: env
+      value: dev
+  triggerPatterns:
+    - terraform/**/*.tf
+  triggerPrefixes:
+    - terraform/
+  vcsRepo:
+    identifier: example-org/example-repo
+    branch: main
+    oauthTokenID: ot-123456
+  variables:
+    - key: AWS_REGION
+      category: env
+      value: us-east-1
+    - key: account_id
+      category: terraform
+      value: '"123456789012"'
+      hcl: true
