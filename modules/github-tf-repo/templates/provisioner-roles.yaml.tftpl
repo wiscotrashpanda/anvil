@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Provisioner IAM roles for a GitHub repository backed by HCP Terraform workspaces.
+
+Parameters:
+  RepositoryFullName:
+    Type: String
+  TerraformWorkspaceName:
+    Type: String
+  TerraformOrganizationName:
+    Type: String
+  EnvironmentName:
+    Type: String
+  GitHubOIDCAudience:
+    Type: String
+  GitHubOIDCSubject:
+    Type: String
+  GitHubActionsRoleName:
+    Type: String
+  HCPTerraformOIDCAudience:
+    Type: String
+  HCPTerraformOIDCSubject:
+    Type: String
+  HCPTerraformRoleName:
+    Type: String
+  ManagedPolicyArns:
+    Type: String
+    Default: ""
+
+Conditions:
+  HasManagedPolicyArns: !Not [!Equals [!Ref ManagedPolicyArns, ""]]
+
+Resources:
+  GitHubActionsProvisionerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref GitHubActionsRoleName
+      Description: !Sub "Provisioner role for GitHub Actions on $${RepositoryFullName} ($${EnvironmentName})."
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:oidc-provider/${github_oidc_provider_host}"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                "${github_oidc_provider_host}:aud": !Ref GitHubOIDCAudience
+              StringLike:
+                "${github_oidc_provider_host}:sub": !Ref GitHubOIDCSubject
+      ManagedPolicyArns: !If
+        - HasManagedPolicyArns
+        - !Split [",", !Ref ManagedPolicyArns]
+        - !Ref AWS::NoValue
+      Tags:
+        - Key: Repository
+          Value: !Ref RepositoryFullName
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Provisioner
+          Value: github-actions
+        - Key: ManagedBy
+          Value: Terraform
+
+  HCPTerraformProvisionerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref HCPTerraformRoleName
+      Description: !Sub "Provisioner role for HCP Terraform workspace $${TerraformWorkspaceName}."
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:$${AWS::Partition}:iam::$${AWS::AccountId}:oidc-provider/${tfe_oidc_provider_host}"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                "${tfe_oidc_provider_host}:aud": !Ref HCPTerraformOIDCAudience
+              StringLike:
+                "${tfe_oidc_provider_host}:sub": !Ref HCPTerraformOIDCSubject
+      ManagedPolicyArns: !If
+        - HasManagedPolicyArns
+        - !Split [",", !Ref ManagedPolicyArns]
+        - !Ref AWS::NoValue
+      Tags:
+        - Key: Repository
+          Value: !Ref RepositoryFullName
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Provisioner
+          Value: hcp-terraform
+        - Key: TerraformOrganization
+          Value: !Ref TerraformOrganizationName
+        - Key: TerraformWorkspace
+          Value: !Ref TerraformWorkspaceName
+        - Key: ManagedBy
+          Value: Terraform
+
+Outputs:
+  GitHubActionsRoleArn:
+    Description: ARN of the GitHub Actions provisioner role.
+    Value: !GetAtt GitHubActionsProvisionerRole.Arn
+  HCPTerraformRoleArn:
+    Description: ARN of the HCP Terraform provisioner role.
+    Value: !GetAtt HCPTerraformProvisionerRole.Arn
