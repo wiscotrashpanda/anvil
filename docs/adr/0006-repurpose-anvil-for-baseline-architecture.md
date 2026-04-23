@@ -14,7 +14,7 @@ A Terraform module can express the same "one declaration fans out into a repo st
 
 Repurpose `emkaytec/anvil` as the public-safe baseline architecture repository.
 
-The first module lives in `modules/github-tf-repo` and creates a GitHub repository, HCP Terraform workspaces, and per-environment AWS IAM provisioner roles through CloudFormation StackSets. It stays inside Anvil while the contract settles, then can be extracted into a standalone Terraform module repository.
+The first module lives in `modules/github-tf-repo` and creates a GitHub repository, HCP Terraform workspaces, and a per-environment AWS IAM provisioner role through CloudFormation StackSets. It stays inside Anvil while the contract settles, then can be extracted into a standalone Terraform module repository.
 
 Forge keeps the existing manifest and reconciliation implementation as working context. It may be marked deprecated or legacy later, but it should not be deleted just because this direction is taking over. Alloy is left unchanged until there is a clearer shared-schema need.
 

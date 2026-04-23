@@ -31,16 +31,10 @@ output "provisioner_roles" {
   value = {
     for environment in keys(var.environments) :
     environment => {
-      github_actions = {
-        name    = local.github_actions_role_names[environment]
-        arn     = local.github_actions_role_arns[environment]
-        subject = local.github_actions_subjects[environment]
-      }
-      hcp_terraform = {
-        name    = local.tfe_role_names[environment]
-        arn     = local.tfe_role_arns[environment]
-        subject = local.tfe_subjects[environment]
-      }
+      name                   = local.provisioner_role_names[environment]
+      arn                    = local.provisioner_role_arns[environment]
+      github_actions_subject = local.github_actions_subjects[environment]
+      hcp_terraform_subject  = local.tfe_subjects[environment]
     }
   }
 }

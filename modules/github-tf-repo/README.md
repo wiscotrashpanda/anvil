@@ -5,7 +5,7 @@ Terraform module for one repository-shaped unit of infrastructure:
 - one GitHub repository
 - one HCP Terraform workspace per environment
 - one CloudFormation StackSet per environment
-- two AWS IAM provisioner roles per environment: GitHub Actions and HCP Terraform
+- one AWS IAM provisioner role per environment trusted by GitHub Actions and HCP Terraform
 
 This is the Terraform-module version of the Forge `manifest compose terraform-github-repo` idea: a single declaration fans out into the primitive resources needed for a repo-backed Terraform workload.
 
@@ -67,13 +67,13 @@ tfe_vcs_repo = {
 
 ## AWS Prerequisites
 
-The module creates the provisioner roles through CloudFormation StackSets, so the StackSet prerequisites must already exist:
+The module creates the shared provisioner role through CloudFormation StackSets, so the StackSet prerequisites must already exist:
 
 - the AWS provider must be authenticated in the StackSet administrator account
 - for `SELF_MANAGED` StackSets, each target account must already have the configured StackSet execution role
 - each target account must already have OIDC providers for `token.actions.githubusercontent.com` and `app.terraform.io`
 
-The CloudFormation template creates only the two IAM roles per environment. OIDC provider bootstrap stays separate so existing accounts are not forced through a fragile create-or-conflict path.
+The CloudFormation template creates only the IAM role per environment. OIDC provider bootstrap stays separate so existing accounts are not forced through a fragile create-or-conflict path.
 
 ## Defaults
 
@@ -83,12 +83,10 @@ Each environment defaults to:
 
 - workspace name: `<repository-name>-<environment>`
 - region: `us-east-1`
-- role names:
-  - `<repository-name>-<environment>-gha-provisioner-role`
-  - `<repository-name>-<environment>-tfc-provisioner-role`
+- role name: `<repository-name>-<environment>-provisioner-role`
 - managed policy: `arn:aws:iam::aws:policy/ReadOnlyAccess`
 
-HCP Terraform workspace variables are created by default:
+HCP Terraform workspace variables are created by default. `TFC_AWS_RUN_ROLE_ARN` points at the shared provisioner role.
 
 - `account_id`
 - `aws_region`
@@ -113,4 +111,4 @@ HCP Terraform defaults to the organization resolved by the TFE provider/workspac
 organization:<workspace.organization>:project:<tfe_project_name>:workspace:<workspace-name>:run_phase:*
 ```
 
-Use `github_actions_subject` or `tfe_subject` on an environment to narrow either trust policy.
+Use `github_actions_subject` or `tfe_subject` on an environment to narrow the corresponding trust statement.

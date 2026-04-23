@@ -68,7 +68,7 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
   for_each = var.environments
 
   name                    = local.stack_set_names[each.key]
-  description             = "Provisioner IAM roles for ${github_repository.this.full_name} (${each.key})."
+  description             = "Provisioner IAM role for ${github_repository.this.full_name} (${each.key})."
   permission_model        = var.stack_set_permission_model
   call_as                 = var.stack_set_call_as
   administration_role_arn = var.stack_set_permission_model == "SELF_MANAGED" ? var.stack_set_administration_role_arn : null
@@ -76,17 +76,17 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
   capabilities            = ["CAPABILITY_NAMED_IAM"]
   template_body = templatefile("${path.module}/templates/provisioner-roles.yaml.tftpl", {
     github_oidc_provider_host = var.github_oidc_provider_host
+    repository_full_name      = github_repository.this.full_name
     tfe_oidc_provider_host    = var.tfe_oidc_provider_host
   })
 
   parameters = {
     GitHubOIDCAudience        = var.github_oidc_audience
     GitHubOIDCSubject         = local.github_actions_subjects[each.key]
-    GitHubActionsRoleName     = local.github_actions_role_names[each.key]
     HCPTerraformOIDCAudience  = var.tfe_oidc_audience
     HCPTerraformOIDCSubject   = local.tfe_subjects[each.key]
-    HCPTerraformRoleName      = local.tfe_role_names[each.key]
     ManagedPolicyArns         = join(",", local.managed_policy_arns_by_environment[each.key])
+    ProvisionerRoleName       = local.provisioner_role_names[each.key]
     RepositoryFullName        = github_repository.this.full_name
     TerraformWorkspaceName    = local.workspace_names[each.key]
     TerraformOrganizationName = tfe_workspace.this[each.key].organization
@@ -186,7 +186,7 @@ resource "tfe_variable" "tfc_aws_run_role_arn" {
 
   workspace_id = tfe_workspace.this[each.key].id
   key          = "TFC_AWS_RUN_ROLE_ARN"
-  value        = local.tfe_role_arns[each.key]
+  value        = local.provisioner_role_arns[each.key]
   category     = "env"
   description  = "AWS IAM role assumed by HCP Terraform runs."
 

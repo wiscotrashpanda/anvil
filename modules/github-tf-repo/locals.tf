@@ -19,24 +19,14 @@ locals {
     environment => try(config.managed_policy_arns, null) != null ? config.managed_policy_arns : var.managed_policy_arns
   }
 
-  github_actions_role_names = {
+  provisioner_role_names = {
     for environment in keys(var.environments) :
-    environment => "${local.repository_name}-${environment}-gha-provisioner-role"
+    environment => "${local.repository_name}-${environment}-provisioner-role"
   }
 
-  tfe_role_names = {
-    for environment in keys(var.environments) :
-    environment => "${local.repository_name}-${environment}-tfc-provisioner-role"
-  }
-
-  github_actions_role_arns = {
+  provisioner_role_arns = {
     for environment, config in var.environments :
-    environment => "arn:${var.aws_partition}:iam::${config.account_id}:role/${local.github_actions_role_names[environment]}"
-  }
-
-  tfe_role_arns = {
-    for environment, config in var.environments :
-    environment => "arn:${var.aws_partition}:iam::${config.account_id}:role/${local.tfe_role_names[environment]}"
+    environment => "arn:${var.aws_partition}:iam::${config.account_id}:role/${local.provisioner_role_names[environment]}"
   }
 
   github_actions_subjects = {

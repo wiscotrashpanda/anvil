@@ -33,7 +33,7 @@ variable "repository" {
 }
 
 variable "environments" {
-  description = "Environment-to-account map. Each entry creates one TFE workspace, one StackSet, and two IAM roles."
+  description = "Environment-to-account map. Each entry creates one TFE workspace, one StackSet, and one IAM role."
   type = map(object({
     account_id             = string
     region                 = optional(string)
@@ -78,7 +78,7 @@ variable "aws_partition" {
 }
 
 variable "managed_policy_arns" {
-  description = "Managed policy ARNs attached to both provisioner roles unless an environment overrides them."
+  description = "Managed policy ARNs attached to the provisioner role unless an environment overrides them."
   type        = list(string)
   default     = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }

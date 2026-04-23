@@ -15,7 +15,7 @@ The module creates:
 - one GitHub repository
 - one HCP Terraform workspace per environment
 - one CloudFormation StackSet per environment
-- two AWS IAM provisioner roles per environment: GitHub Actions and HCP Terraform
+- one AWS IAM provisioner role per environment trusted by GitHub Actions and HCP Terraform
 
 ## Direction
 
