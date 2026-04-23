@@ -202,3 +202,39 @@ resource "tfe_variable" "tfc_aws_workload_identity_audience" {
   category     = "env"
   description  = "OIDC audience expected by the AWS IAM trust policy."
 }
+
+resource "github_repository_environment" "this" {
+  for_each = var.environments
+
+  repository  = github_repository.this.name
+  environment = each.key
+}
+
+resource "github_actions_environment_variable" "aws_region" {
+  for_each = var.environments
+
+  repository    = github_repository.this.name
+  environment   = github_repository_environment.this[each.key].environment
+  variable_name = "AWS_REGION"
+  value         = local.environment_regions[each.key]
+}
+
+resource "github_actions_environment_variable" "aws_account_id" {
+  for_each = var.environments
+
+  repository    = github_repository.this.name
+  environment   = github_repository_environment.this[each.key].environment
+  variable_name = "AWS_ACCOUNT_ID"
+  value         = each.value.account_id
+}
+
+resource "github_actions_environment_variable" "aws_provisioner_role_arn" {
+  for_each = var.environments
+
+  repository    = github_repository.this.name
+  environment   = github_repository_environment.this[each.key].environment
+  variable_name = "AWS_PROVISIONER_ROLE_ARN"
+  value         = local.provisioner_role_arns[each.key]
+
+  depends_on = [aws_cloudformation_stack_set_instance.provisioner_roles]
+}
