@@ -11,6 +11,12 @@ locals {
     file_name => yamldecode(file("${local.manifest_directory}/${file_name}"))
   }
 
+  github_repo_manifests = {
+    for file_name, manifest in local.manifests_by_file :
+    try(manifest.metadata.name, trimsuffix(trimsuffix(basename(file_name), ".yaml"), ".yml")) => manifest
+    if try(manifest.kind, "") == "GitHubRepository"
+  }
+
   github_tf_repo_manifests = {
     for file_name, manifest in local.manifests_by_file :
     try(manifest.metadata.name, trimsuffix(trimsuffix(basename(file_name), ".yaml"), ".yml")) => manifest

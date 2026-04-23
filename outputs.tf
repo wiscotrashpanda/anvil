@@ -1,3 +1,11 @@
+output "github_repositories" {
+  description = "Standalone GitHub repository outputs keyed by manifest metadata.name."
+  value = {
+    for name, repo in module.github_repo :
+    name => repo.repository
+  }
+}
+
 output "github_tf_repositories" {
   description = "Repo-backed Terraform workload outputs keyed by manifest metadata.name."
   value = {

@@ -1,5 +1,5 @@
 variable "github_owner" {
-  description = "GitHub user or organization configured on the root GitHub provider."
+  description = "GitHub user or organization configured on the root GitHub provider. GitHubRepository manifest spec.owner values must match it."
   type        = string
 
   validation {
@@ -9,12 +9,13 @@ variable "github_owner" {
 }
 
 variable "tfe_organization" {
-  description = "HCP Terraform organization configured on the root TFE provider."
+  description = "HCP Terraform organization configured on the root TFE provider. Required only when planning GitHubTerraformRepository manifests."
   type        = string
+  default     = null
 
   validation {
-    condition     = length(trimspace(var.tfe_organization)) > 0
-    error_message = "tfe_organization must not be empty."
+    condition     = var.tfe_organization == null || length(trimspace(var.tfe_organization)) > 0
+    error_message = "tfe_organization must not be blank when set."
   }
 }
 

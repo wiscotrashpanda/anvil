@@ -1,3 +1,18 @@
+module "github_repo" {
+  for_each = local.github_repo_manifests
+
+  source = "./modules/github-repo"
+
+  providers = {
+    github = github.emkaytec
+  }
+
+  repository = merge(
+    { name = each.key },
+    try(each.value.spec.repository, each.value.spec),
+  )
+}
+
 module "github_tf_repo" {
   for_each = local.github_tf_repo_manifests
 
