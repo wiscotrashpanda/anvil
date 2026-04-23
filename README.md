@@ -6,6 +6,7 @@ The earlier manifest authoring, schema, and reconciliation work remains in `emka
 
 ## Current Layout
 
+- `manifests/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there.
 - `modules/github-tf-repo/` defines the first extractable Terraform module for one repo-backed Terraform workload.
 - `modules/github-tf-repo/examples/basic/` shows a minimal caller shape.
 
@@ -21,3 +22,31 @@ The module creates:
 For now, this repository is the design and implementation space for the baseline architecture. Once the module contract settles, `modules/github-tf-repo` can be extracted into a standalone Terraform module repository, likely named `terraform-aws-github-tf-repo`.
 
 Keep public code, module contracts, and sanitized examples here. Real account IDs, operational manifests, tokens, and environment-specific values belong in private configuration.
+
+## Manifests
+
+Create one private YAML file per repo-backed Terraform workload under `manifests/`. Files ending in `.yaml` and `.yml` are ignored by Git so real desired state does not get committed to the public repository.
+
+```yaml
+apiVersion: anvil.emkaytec.dev/v1alpha1
+kind: GitHubTerraformRepository
+metadata:
+  name: sample-service
+spec:
+  github_owner: emkaytec
+  tfe_organization: emkaytec
+  stack_set_administration_role_arn: arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole
+  repository:
+    description: Terraform-managed sample service.
+    visibility: private
+  environments:
+    dev:
+      account_id: "111111111111"
+```
+
+Run Terraform from the repo root after placing private manifests in `manifests/`:
+
+```bash
+terraform init
+terraform plan
+```

@@ -1,6 +1,8 @@
 **/.terraform/
 modules/**/.terraform.lock.hcl
 modules/**/examples/**/.terraform.lock.hcl
+manifests/**/*.yaml
+manifests/**/*.yml
 *.tfstate
 *.tfstate.*
 crash.log
