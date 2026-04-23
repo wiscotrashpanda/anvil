@@ -32,8 +32,8 @@ module "github_tf_repo" {
   manage_tfe_workspace_variables    = try(each.value.spec.manage_tfe_workspace_variables, true)
   stack_set_name_prefix             = try(each.value.spec.stack_set_name_prefix, null)
   stack_set_permission_model        = try(each.value.spec.stack_set_permission_model, "SELF_MANAGED")
-  stack_set_administration_role_arn = try(each.value.spec.stack_set_administration_role_arn, null)
-  stack_set_execution_role_name     = try(each.value.spec.stack_set_execution_role_name, "AWSCloudFormationStackSetExecutionRole")
+  stack_set_administration_role_arn = var.stack_set_administration_role_arn
+  stack_set_execution_role_name     = var.stack_set_execution_role_name
   stack_set_call_as                 = try(each.value.spec.stack_set_call_as, "SELF")
   stack_set_operation_preferences   = try(each.value.spec.stack_set_operation_preferences, null)
   retain_stack_instances_on_destroy = try(each.value.spec.retain_stack_instances_on_destroy, false)

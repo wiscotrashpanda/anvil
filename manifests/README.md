@@ -14,7 +14,6 @@ metadata:
 spec:
   github_owner: emkaytec
   tfe_organization: emkaytec
-  stack_set_administration_role_arn: arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole
 
   repository:
     description: Terraform-managed sample service.
@@ -32,3 +31,10 @@ spec:
 ```
 
 The `metadata.name` value becomes the module key and defaults the GitHub repository name unless `spec.repository.name` is provided.
+
+Shared StackSet role wiring is system-wide and belongs in the ignored root `terraform.tfvars` file:
+
+```hcl
+stack_set_administration_role_arn = "arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole"
+stack_set_execution_role_name     = "AWSCloudFormationStackSetExecutionRole"
+```
