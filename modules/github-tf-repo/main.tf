@@ -32,7 +32,7 @@ module "hcp_tf_workspace" {
   github_repository      = module.github_repo.repository.full_name
   environment            = each.key
   account_id             = each.value.account_id
-  region                 = try(each.value.region, null)
+  region                 = coalesce(try(each.value.region, null), var.default_region)
   workspace_name         = try(each.value.workspace_name, null)
   managed_policy_arns    = try(each.value.managed_policy_arns, var.managed_policy_arns)
   github_actions_subject = try(each.value.github_actions_subject, null)
