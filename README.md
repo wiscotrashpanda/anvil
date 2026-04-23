@@ -7,13 +7,21 @@ The earlier manifest authoring, schema, and reconciliation work remains in `emka
 ## Current Layout
 
 - `manifests/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there.
-- `modules/github-repo/` defines the standalone GitHub-only module built from the reduced `GitHubRepository` manifest surface.
+- `modules/github-repo/` defines the shared GitHub repository creation module.
+- `modules/hcp-tf-workspace/` defines the reusable workspace-and-role module for one repo-backed HCP Terraform environment.
 - `modules/github-tf-repo/` defines the first extractable Terraform module for one repo-backed Terraform workload.
 - `modules/github-tf-repo/examples/basic/` shows a minimal caller shape.
 
 The standalone GitHub module creates:
 
 - one GitHub repository
+
+The standalone HCP Terraform environment module creates:
+
+- one HCP Terraform workspace
+- one CloudFormation StackSet
+- one AWS IAM provisioner role
+- one GitHub environment with AWS variables for that environment
 
 The Terraform workload module creates:
 
@@ -24,7 +32,7 @@ The Terraform workload module creates:
 
 ## Direction
 
-For now, this repository is the design and implementation space for the baseline architecture. Once the module contracts settle, `modules/github-repo` and `modules/github-tf-repo` can be extracted into standalone Terraform module repositories with minimal path churn.
+For now, this repository is the design and implementation space for the baseline architecture. Once the module contracts settle, `modules/github-repo`, `modules/hcp-tf-workspace`, and `modules/github-tf-repo` can be extracted into standalone Terraform module repositories with minimal path churn.
 
 Keep public code, module contracts, and sanitized examples here. Real account IDs, operational manifests, tokens, and environment-specific values belong in private configuration.
 
@@ -77,6 +85,20 @@ spec:
 
 Standalone `GitHubRepository` manifests are translated into the same repository settings object used by `modules/github-tf-repo`, so the underlying GitHub repository defaults and behaviors stay aligned across both Terraform module paths.
 
+Use `HCPTerraformWorkspace` when the GitHub repository already exists and you only want to add the Terraform workspace, GitHub environment wiring, and AWS provisioner role for one environment:
+
+```yaml
+apiVersion: anvil.emkaytec.dev/v1alpha1
+kind: HCPTerraformWorkspace
+metadata:
+  name: sample-service-dev
+spec:
+  github_repository: emkaytec/sample-service
+  environment: dev
+  account_id: "111111111111"
+  tfe_workspace_terraform_version: "1.10.0"
+```
+
 Run Terraform from the repo root after placing private manifests in `manifests/`:
 
 ```bash
@@ -84,9 +106,9 @@ terraform init
 terraform plan
 ```
 
-The root module uses explicit `emkaytec` provider aliases for GitHub and HCP Terraform. Set shared provider ownership once in an ignored root `terraform.tfvars` file. Standalone `GitHubRepository` manifests inherit their owner from `github_owner`.
+The root module uses explicit `emkaytec` provider aliases for GitHub and HCP Terraform. Set shared provider ownership once in an ignored root `terraform.tfvars` file. Standalone `GitHubRepository` manifests inherit their owner from `github_owner`, and direct `HCPTerraformWorkspace.spec.github_repository` values must use that same owner.
 
-When you are also planning `GitHubTerraformRepository` manifests, add the HCP Terraform organization and shared StackSet role wiring there too:
+When you are planning `GitHubTerraformRepository` or `HCPTerraformWorkspace` manifests, add the HCP Terraform organization and shared StackSet role wiring there too:
 
 ```hcl
 github_owner     = "emkaytec"

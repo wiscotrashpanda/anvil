@@ -6,6 +6,19 @@ output "github_repositories" {
   }
 }
 
+output "hcp_tf_workspaces" {
+  description = "Standalone HCP Terraform workspace environment outputs keyed by manifest metadata.name."
+  value = {
+    for name, workspace in module.hcp_tf_workspace :
+    name => {
+      github_repository = workspace.github_repository
+      workspace         = workspace.workspace
+      provisioner_role  = workspace.provisioner_role
+      stack_set         = workspace.stack_set
+    }
+  }
+}
+
 output "github_tf_repositories" {
   description = "Repo-backed Terraform workload outputs keyed by manifest metadata.name."
   value = {

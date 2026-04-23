@@ -122,6 +122,17 @@ locals {
     )
   }
 
+  hcp_tf_workspace_manifests = {
+    for file_name, manifest in local.manifests_by_file :
+    try(manifest.metadata.name, trimsuffix(trimsuffix(basename(file_name), ".yaml"), ".yml")) => manifest
+    if try(manifest.kind, "") == "HCPTerraformWorkspace"
+  }
+
+  hcp_tf_workspace_module_inputs = {
+    for name, manifest in local.hcp_tf_workspace_manifests :
+    name => try(manifest.spec, {})
+  }
+
   github_tf_repo_manifests = {
     for file_name, manifest in local.manifests_by_file :
     try(manifest.metadata.name, trimsuffix(trimsuffix(basename(file_name), ".yaml"), ".yml")) => manifest

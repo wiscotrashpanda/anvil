@@ -60,7 +60,23 @@ Standalone `GitHubRepository` manifests inherit their owner from the root `githu
 
 Under the hood, Anvil translates standalone `GitHubRepository` manifests into the same repository settings object used by `GitHubTerraformRepository.spec.repository`, so both Terraform module paths share one repository-creation interface and one set of defaults.
 
-Provider ownership is configured through the root module's explicit `emkaytec` provider aliases. `github_owner` is always required. `tfe_organization` and the shared StackSet role wiring are needed only when you are planning `GitHubTerraformRepository` manifests, and they belong in the ignored root `terraform.tfvars` file:
+When the GitHub repository already exists, use `HCPTerraformWorkspace` for one workspace environment:
+
+```yaml
+apiVersion: anvil.emkaytec.dev/v1alpha1
+kind: HCPTerraformWorkspace
+metadata:
+  name: sample-service-dev
+spec:
+  github_repository: emkaytec/sample-service
+  environment: dev
+  account_id: "111111111111"
+  tfe_workspace_terraform_version: "1.10.0"
+```
+
+`spec.github_repository` must use the same owner configured by the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration.
+
+Provider ownership is configured through the root module's explicit `emkaytec` provider aliases. `github_owner` is always required. `tfe_organization` and the shared StackSet role wiring are needed when you are planning `GitHubTerraformRepository` or `HCPTerraformWorkspace` manifests, and they belong in the ignored root `terraform.tfvars` file:
 
 ```hcl
 github_owner     = "emkaytec"
