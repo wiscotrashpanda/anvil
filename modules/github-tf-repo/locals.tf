@@ -33,7 +33,7 @@ locals {
     for environment, config in var.environments :
     environment => coalesce(
       try(config.github_actions_subject, null),
-      "repo:${github_repository.this.full_name}:*"
+      "repo:${module.github_repo.repository.full_name}:*"
     )
   }
 

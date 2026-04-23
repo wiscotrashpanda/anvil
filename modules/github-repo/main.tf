@@ -1,25 +1,25 @@
 resource "github_repository" "this" {
   name                   = var.repository.name
-  description            = try(var.repository.description, null)
-  visibility             = coalesce(try(var.repository.visibility, null), "private")
-  homepage_url           = try(var.repository.homepage, null)
-  auto_init              = try(var.repository.autoInit, false)
-  topics                 = try(var.repository.topics, null)
-  has_issues             = try(var.repository.features.hasIssues, null)
-  has_projects           = try(var.repository.features.hasProjects, null)
-  has_wiki               = try(var.repository.features.hasWiki, null)
-  allow_squash_merge     = try(var.repository.mergePolicy.allowSquashMerge, null)
-  allow_merge_commit     = try(var.repository.mergePolicy.allowMergeCommit, null)
-  allow_rebase_merge     = try(var.repository.mergePolicy.allowRebaseMerge, null)
-  allow_auto_merge       = try(var.repository.mergePolicy.allowAutoMerge, null)
-  allow_update_branch    = try(var.repository.mergePolicy.allowUpdateBranch, null)
-  delete_branch_on_merge = try(var.repository.mergePolicy.deleteBranchOnMerge, null)
+  description            = var.repository.description
+  visibility             = var.repository.visibility
+  homepage_url           = var.repository.homepage_url
+  topics                 = var.repository.topics
+  auto_init              = var.repository.auto_init
+  archive_on_destroy     = var.repository.archive_on_destroy
+  has_issues             = var.repository.has_issues
+  has_projects           = var.repository.has_projects
+  has_wiki               = var.repository.has_wiki
+  has_discussions        = var.repository.has_discussions
+  allow_merge_commit     = var.repository.allow_merge_commit
+  allow_squash_merge     = var.repository.allow_squash_merge
+  allow_rebase_merge     = var.repository.allow_rebase_merge
+  delete_branch_on_merge = var.repository.delete_branch_on_merge
 }
 
 resource "github_branch_default" "this" {
-  count = try(var.repository.defaultBranch, null) == null ? 0 : 1
+  count = var.repository.manage_default_branch ? 1 : 0
 
   repository = github_repository.this.name
-  branch     = var.repository.defaultBranch
-  rename     = true
+  branch     = var.repository.default_branch
+  rename     = var.repository.rename_default_branch
 }

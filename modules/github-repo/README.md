@@ -1,12 +1,12 @@
 # github-repo module
 
-Terraform module for one standalone GitHub repository.
+Terraform module for one GitHub repository. This is the shared repository-creation module used directly for standalone repositories and indirectly by `github-tf-repo`.
 
 The module manages only the GitHub repository itself: no HCP Terraform workspaces, no CloudFormation StackSets, and no AWS IAM provisioner roles.
 
 ## Usage
 
-Configure the GitHub provider owner in the caller, map that provider into the module, and pass repository settings. The GitHub owner comes from the provider configuration rather than from the module input.
+Configure the GitHub provider owner in the caller, map that provider into the module, and pass repository settings. The input object intentionally matches the `repository` variable used by `modules/github-tf-repo` so both paths create the repo from the same settings.
 
 ```hcl
 provider "github" {
@@ -22,30 +22,26 @@ module "repo" {
   }
 
   repository = {
-    name          = "docs-site"
-    visibility    = "public"
-    description   = "Public documentation site."
-    autoInit      = true
-    defaultBranch = "main"
-    topics        = ["docs", "website"]
-    features = {
-      hasIssues   = true
-      hasProjects = false
-      hasWiki     = false
-    }
-    mergePolicy = {
-      allowSquashMerge    = true
-      allowMergeCommit    = false
-      allowRebaseMerge    = true
-      deleteBranchOnMerge = true
-    }
+    name                   = "docs-site"
+    description            = "Public documentation site."
+    visibility             = "public"
+    topics                 = ["docs", "website"]
+    auto_init              = true
+    has_issues             = true
+    has_projects           = false
+    has_wiki               = false
+    allow_squash_merge     = true
+    allow_merge_commit     = false
+    allow_rebase_merge     = true
+    delete_branch_on_merge = true
+    default_branch         = "main"
+    manage_default_branch  = true
   }
 }
 ```
 
 ## Notes
 
-- `visibility` defaults to `private` when omitted so newly created repositories stay on the safe side.
-- `defaultBranch` is managed only when set. Renaming the default branch still requires the branch to exist.
-- `name` is the only required repository setting. At the root composition layer, `metadata.name` can supply that value when the manifest omits `spec.repository.name`.
-- Omitted `features`, `mergePolicy`, `homepage`, and `topics` fields are passed through as unset values, so GitHub/provider defaults remain in effect unless you declare them.
+- `visibility` defaults to `private`, `auto_init` defaults to `true`, and `default_branch` defaults to `main`.
+- `manage_default_branch` and `rename_default_branch` let callers control whether Terraform actively manages or renames the default branch.
+- At the root composition layer, `GitHubRepository` manifests are translated into this shared repository input shape before reaching the module.

@@ -22,22 +22,19 @@ module "repo" {
   }
 
   repository = {
-    name          = var.repository_name
-    description   = "Example standalone GitHub repository."
-    visibility    = "private"
-    autoInit      = true
-    defaultBranch = "main"
-    topics        = ["github", "standalone"]
-    features = {
-      hasIssues   = true
-      hasProjects = false
-      hasWiki     = false
-    }
-    mergePolicy = {
-      allowSquashMerge    = true
-      allowMergeCommit    = false
-      allowRebaseMerge    = true
-      deleteBranchOnMerge = true
-    }
+    name                   = var.repository_name
+    description            = "Example standalone GitHub repository."
+    visibility             = "private"
+    topics                 = ["github", "standalone"]
+    auto_init              = true
+    has_issues             = true
+    has_projects           = false
+    has_wiki               = false
+    allow_squash_merge     = true
+    allow_merge_commit     = false
+    allow_rebase_merge     = true
+    delete_branch_on_merge = true
+    default_branch         = "main"
+    manage_default_branch  = true
   }
 }

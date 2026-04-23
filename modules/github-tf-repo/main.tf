@@ -1,27 +1,21 @@
-resource "github_repository" "this" {
-  name                   = local.repository_name
-  description            = var.repository.description
-  visibility             = var.repository.visibility
-  homepage_url           = var.repository.homepage_url
-  topics                 = var.repository.topics
-  auto_init              = var.repository.auto_init
-  archive_on_destroy     = var.repository.archive_on_destroy
-  has_issues             = var.repository.has_issues
-  has_projects           = var.repository.has_projects
-  has_wiki               = var.repository.has_wiki
-  has_discussions        = var.repository.has_discussions
-  allow_merge_commit     = var.repository.allow_merge_commit
-  allow_squash_merge     = var.repository.allow_squash_merge
-  allow_rebase_merge     = var.repository.allow_rebase_merge
-  delete_branch_on_merge = var.repository.delete_branch_on_merge
+module "github_repo" {
+  source = "../github-repo"
+
+  providers = {
+    github = github
+  }
+
+  repository = var.repository
 }
 
-resource "github_branch_default" "this" {
-  count = var.repository.manage_default_branch ? 1 : 0
+moved {
+  from = github_repository.this
+  to   = module.github_repo.github_repository.this
+}
 
-  repository = github_repository.this.name
-  branch     = local.default_branch
-  rename     = var.repository.rename_default_branch
+moved {
+  from = github_branch_default.this
+  to   = module.github_repo.github_branch_default.this
 }
 
 resource "tfe_workspace" "this" {
@@ -29,7 +23,7 @@ resource "tfe_workspace" "this" {
 
   name                = local.workspace_names[each.key]
   project_id          = var.tfe_project_id
-  description         = "Terraform workspace for ${github_repository.this.full_name} (${each.key})."
+  description         = "Terraform workspace for ${module.github_repo.repository.full_name} (${each.key})."
   auto_apply          = var.tfe_workspace_auto_apply
   queue_all_runs      = var.tfe_workspace_queue_all_runs
   speculative_enabled = var.tfe_workspace_speculative_enabled
@@ -47,7 +41,7 @@ resource "tfe_workspace" "this" {
     for_each = local.use_tfe_vcs_repo ? [var.tfe_vcs_repo] : []
 
     content {
-      identifier                 = github_repository.this.full_name
+      identifier                 = module.github_repo.repository.full_name
       branch                     = coalesce(try(vcs_repo.value.branch, null), local.default_branch)
       oauth_token_id             = try(vcs_repo.value.oauth_token_id, null)
       github_app_installation_id = try(vcs_repo.value.github_app_installation_id, null)
@@ -68,7 +62,7 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
   for_each = var.environments
 
   name                    = local.stack_set_names[each.key]
-  description             = "Provisioner IAM role for ${github_repository.this.full_name} (${each.key})."
+  description             = "Provisioner IAM role for ${module.github_repo.repository.full_name} (${each.key})."
   permission_model        = var.stack_set_permission_model
   call_as                 = var.stack_set_call_as
   administration_role_arn = var.stack_set_permission_model == "SELF_MANAGED" ? var.stack_set_administration_role_arn : null
@@ -76,7 +70,7 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
   capabilities            = ["CAPABILITY_NAMED_IAM"]
   template_body = templatefile("${path.module}/templates/provisioner-roles.yaml.tftpl", {
     github_oidc_provider_host = var.github_oidc_provider_host
-    repository_full_name      = github_repository.this.full_name
+    repository_full_name      = module.github_repo.repository.full_name
     tfe_oidc_provider_host    = var.tfe_oidc_provider_host
   })
 
@@ -87,7 +81,7 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
     HCPTerraformOIDCSubject   = local.tfe_subjects[each.key]
     ManagedPolicyArns         = join(",", local.managed_policy_arns_by_environment[each.key])
     ProvisionerRoleName       = local.provisioner_role_names[each.key]
-    RepositoryFullName        = github_repository.this.full_name
+    RepositoryFullName        = module.github_repo.repository.full_name
     TerraformWorkspaceName    = local.workspace_names[each.key]
     TerraformOrganizationName = tfe_workspace.this[each.key].organization
     EnvironmentName           = each.key
@@ -206,14 +200,14 @@ resource "tfe_variable" "tfc_aws_workload_identity_audience" {
 resource "github_repository_environment" "this" {
   for_each = var.environments
 
-  repository  = github_repository.this.name
+  repository  = module.github_repo.repository.name
   environment = each.key
 }
 
 resource "github_actions_environment_variable" "aws_region" {
   for_each = var.environments
 
-  repository    = github_repository.this.name
+  repository    = module.github_repo.repository.name
   environment   = github_repository_environment.this[each.key].environment
   variable_name = "AWS_REGION"
   value         = local.environment_regions[each.key]
@@ -222,7 +216,7 @@ resource "github_actions_environment_variable" "aws_region" {
 resource "github_actions_environment_variable" "aws_account_id" {
   for_each = var.environments
 
-  repository    = github_repository.this.name
+  repository    = module.github_repo.repository.name
   environment   = github_repository_environment.this[each.key].environment
   variable_name = "AWS_ACCOUNT_ID"
   value         = each.value.account_id
@@ -231,7 +225,7 @@ resource "github_actions_environment_variable" "aws_account_id" {
 resource "github_actions_environment_variable" "aws_provisioner_role_arn" {
   for_each = var.environments
 
-  repository    = github_repository.this.name
+  repository    = module.github_repo.repository.name
   environment   = github_repository_environment.this[each.key].environment
   variable_name = "AWS_PROVISIONER_ROLE_ARN"
   value         = local.provisioner_role_arns[each.key]

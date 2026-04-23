@@ -75,6 +75,8 @@ spec:
       account_id: "111111111111"
 ```
 
+Standalone `GitHubRepository` manifests are translated into the same repository settings object used by `modules/github-tf-repo`, so the underlying GitHub repository defaults and behaviors stay aligned across both Terraform module paths.
+
 Run Terraform from the repo root after placing private manifests in `manifests/`:
 
 ```bash

@@ -1,26 +1,24 @@
 variable "repository" {
-  description = "Standalone GitHub repository settings. Ownership comes from the caller's GitHub provider."
+  description = "GitHub repository settings. Ownership comes from the caller's GitHub provider."
   type = object({
-    name          = string
-    visibility    = optional(string)
-    description   = optional(string)
-    homepage      = optional(string)
-    autoInit      = optional(bool, false)
-    defaultBranch = optional(string)
-    topics        = optional(list(string))
-    features = optional(object({
-      hasIssues   = optional(bool)
-      hasProjects = optional(bool)
-      hasWiki     = optional(bool)
-    }))
-    mergePolicy = optional(object({
-      allowSquashMerge    = optional(bool)
-      allowMergeCommit    = optional(bool)
-      allowRebaseMerge    = optional(bool)
-      allowAutoMerge      = optional(bool)
-      allowUpdateBranch   = optional(bool)
-      deleteBranchOnMerge = optional(bool)
-    }))
+    name                   = string
+    description            = optional(string, "")
+    visibility             = optional(string, "private")
+    topics                 = optional(list(string), [])
+    homepage_url           = optional(string)
+    auto_init              = optional(bool, true)
+    archive_on_destroy     = optional(bool, true)
+    has_issues             = optional(bool, true)
+    has_projects           = optional(bool, false)
+    has_wiki               = optional(bool, false)
+    has_discussions        = optional(bool, false)
+    allow_merge_commit     = optional(bool, false)
+    allow_squash_merge     = optional(bool, true)
+    allow_rebase_merge     = optional(bool, false)
+    delete_branch_on_merge = optional(bool, true)
+    default_branch         = optional(string, "main")
+    manage_default_branch  = optional(bool, true)
+    rename_default_branch  = optional(bool, false)
   })
 
   validation {
@@ -34,23 +32,15 @@ variable "repository" {
   }
 
   validation {
-    condition = try(var.repository.visibility, null) == null || contains(
-      ["public", "private", "internal"],
-      var.repository.visibility,
-    )
-    error_message = "repository.visibility must be public, private, or internal when set."
+    condition     = contains(["public", "private", "internal"], var.repository.visibility)
+    error_message = "repository.visibility must be public, private, or internal."
   }
 
   validation {
-    condition     = try(var.repository.defaultBranch, null) == null || length(trimspace(var.repository.defaultBranch)) > 0
-    error_message = "repository.defaultBranch must not be blank when set."
-  }
-
-  validation {
-    condition = try(var.repository.topics, null) == null || (
+    condition = (
       length([for topic in var.repository.topics : topic if trimspace(topic) == ""]) == 0 &&
       length(distinct([for topic in var.repository.topics : lower(trimspace(topic))])) == length(var.repository.topics)
     )
-    error_message = "repository.topics must contain unique, non-blank values when set."
+    error_message = "repository.topics must contain unique, non-blank values."
   }
 }

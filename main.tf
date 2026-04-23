@@ -7,10 +7,7 @@ module "github_repo" {
     github = github.emkaytec
   }
 
-  repository = merge(
-    { name = each.key },
-    try(each.value.spec.repository, each.value.spec),
-  )
+  repository = local.github_repo_module_inputs[each.key]
 }
 
 module "github_tf_repo" {

@@ -9,6 +9,8 @@ Terraform module for one repository-shaped unit of infrastructure:
 
 This is the Terraform-module version of the Forge `manifest compose terraform-github-repo` idea: a single declaration fans out into the primitive resources needed for a repo-backed Terraform workload.
 
+The GitHub repository itself is created through the shared sibling `modules/github-repo` module so standalone repositories and Terraform-backed repositories use the same repository settings interface.
+
 The module currently lives inside `emkaytec/anvil` while the baseline architecture direction settles. It is intentionally isolated under `modules/github-tf-repo` so it can later move to a standalone `terraform-aws-github-tf-repo` repository with minimal path churn.
 
 ## Usage
