@@ -43,7 +43,7 @@ locals {
     for environment, config in var.environments :
     environment => coalesce(
       try(config.github_actions_subject, null),
-      "repo:${var.github_owner}/${local.repository_name}:*"
+      "repo:${github_repository.this.full_name}:*"
     )
   }
 
@@ -51,7 +51,7 @@ locals {
     for environment, config in var.environments :
     environment => coalesce(
       try(config.tfe_subject, null),
-      "organization:${var.tfe_organization}:project:${var.tfe_project_name}:workspace:${local.workspace_names[environment]}:run_phase:*"
+      "organization:${tfe_workspace.this[environment].organization}:project:${var.tfe_project_name}:workspace:${local.workspace_names[environment]}:run_phase:*"
     )
   }
 

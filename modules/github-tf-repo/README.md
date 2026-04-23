@@ -13,12 +13,27 @@ The module currently lives inside `emkaytec/anvil` while the baseline architectu
 
 ## Usage
 
+Configure provider ownership in the root module, explicitly map those providers into the module, then pass only repository-specific workload inputs.
+
 ```hcl
+provider "github" {
+  alias = "emkaytec"
+  owner = "emkaytec"
+}
+
+provider "tfe" {
+  alias        = "emkaytec"
+  organization = "emkaytec"
+}
+
 module "repo" {
   source = "./modules/github-tf-repo"
 
-  github_owner     = "emkaytec"
-  tfe_organization = "emkaytec"
+  providers = {
+    aws    = aws
+    github = github.emkaytec
+    tfe    = tfe.emkaytec
+  }
 
   repository = {
     name        = "sample-service"
@@ -86,16 +101,16 @@ Set `manage_tfe_workspace_variables = false` to leave workspace variables unmana
 
 ## OIDC Subject Defaults
 
-GitHub Actions defaults to:
+GitHub Actions defaults to the created repository's full name:
 
 ```text
-repo:<github_owner>/<repository.name>:*
+repo:<repository.full_name>:*
 ```
 
-HCP Terraform defaults to:
+HCP Terraform defaults to the organization resolved by the TFE provider/workspace:
 
 ```text
-organization:<tfe_organization>:project:<tfe_project_name>:workspace:<workspace-name>:run_phase:*
+organization:<workspace.organization>:project:<tfe_project_name>:workspace:<workspace-name>:run_phase:*
 ```
 
 Use `github_actions_subject` or `tfe_subject` on an environment to narrow either trust policy.

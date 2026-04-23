@@ -12,9 +12,6 @@ kind: GitHubTerraformRepository
 metadata:
   name: sample-service
 spec:
-  github_owner: emkaytec
-  tfe_organization: emkaytec
-
   repository:
     description: Terraform-managed sample service.
     visibility: private
@@ -32,9 +29,12 @@ spec:
 
 The `metadata.name` value becomes the module key and defaults the GitHub repository name unless `spec.repository.name` is provided.
 
-Shared StackSet role wiring is system-wide and belongs in the ignored root `terraform.tfvars` file:
+Provider ownership is configured through the root module's explicit `emkaytec` provider aliases. These values and shared StackSet role wiring are system-wide and belong in the ignored root `terraform.tfvars` file:
 
 ```hcl
+github_owner     = "emkaytec"
+tfe_organization = "emkaytec"
+
 stack_set_administration_role_arn = "arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole"
 stack_set_execution_role_name     = "AWSCloudFormationStackSetExecutionRole"
 ```

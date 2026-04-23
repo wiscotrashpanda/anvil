@@ -33,8 +33,6 @@ kind: GitHubTerraformRepository
 metadata:
   name: sample-service
 spec:
-  github_owner: emkaytec
-  tfe_organization: emkaytec
   repository:
     description: Terraform-managed sample service.
     visibility: private
@@ -50,9 +48,12 @@ terraform init
 terraform plan
 ```
 
-Set shared StackSet role wiring once in an ignored root `terraform.tfvars` file:
+The root module uses explicit `emkaytec` provider aliases for GitHub and HCP Terraform. Set provider ownership and shared StackSet role wiring once in an ignored root `terraform.tfvars` file:
 
 ```hcl
+github_owner     = "emkaytec"
+tfe_organization = "emkaytec"
+
 stack_set_administration_role_arn = "arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole"
 stack_set_execution_role_name     = "AWSCloudFormationStackSetExecutionRole"
 ```

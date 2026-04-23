@@ -3,10 +3,14 @@ module "github_tf_repo" {
 
   source = "./modules/github-tf-repo"
 
-  github_owner     = each.value.spec.github_owner
-  repository       = merge({ name = each.key }, try(each.value.spec.repository, {}))
-  environments     = each.value.spec.environments
-  tfe_organization = each.value.spec.tfe_organization
+  providers = {
+    aws    = aws
+    github = github.emkaytec
+    tfe    = tfe.emkaytec
+  }
+
+  repository   = merge({ name = each.key }, try(each.value.spec.repository, {}))
+  environments = each.value.spec.environments
 
   default_region                  = try(each.value.spec.default_region, "us-east-1")
   aws_partition                   = try(each.value.spec.aws_partition, "aws")

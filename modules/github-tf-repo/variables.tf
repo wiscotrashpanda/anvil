@@ -1,13 +1,3 @@
-variable "github_owner" {
-  description = "GitHub user or organization that will own the repository."
-  type        = string
-
-  validation {
-    condition     = length(trimspace(var.github_owner)) > 0
-    error_message = "github_owner must not be empty."
-  }
-}
-
 variable "repository" {
   description = "GitHub repository settings. Defaults intentionally cover the common Terraform repo shape."
   type = object({
@@ -115,16 +105,6 @@ variable "tfe_oidc_audience" {
   description = "Expected HCP Terraform OIDC audience claim."
   type        = string
   default     = "aws.workload.identity"
-}
-
-variable "tfe_organization" {
-  description = "HCP Terraform organization slug."
-  type        = string
-
-  validation {
-    condition     = length(trimspace(var.tfe_organization)) > 0
-    error_message = "tfe_organization must not be empty."
-  }
 }
 
 variable "tfe_project_id" {

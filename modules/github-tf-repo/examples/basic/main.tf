@@ -24,16 +24,23 @@ provider "aws" {
 }
 
 provider "github" {
+  alias = "emkaytec"
   owner = var.github_owner
 }
 
-provider "tfe" {}
+provider "tfe" {
+  alias        = "emkaytec"
+  organization = var.tfe_organization
+}
 
 module "repo" {
   source = "../.."
 
-  github_owner     = var.github_owner
-  tfe_organization = var.tfe_organization
+  providers = {
+    aws    = aws
+    github = github.emkaytec
+    tfe    = tfe.emkaytec
+  }
 
   repository = {
     name        = var.repository_name

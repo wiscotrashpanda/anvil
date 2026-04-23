@@ -28,7 +28,6 @@ resource "tfe_workspace" "this" {
   for_each = var.environments
 
   name                = local.workspace_names[each.key]
-  organization        = var.tfe_organization
   project_id          = var.tfe_project_id
   description         = "Terraform workspace for ${github_repository.this.full_name} (${each.key})."
   auto_apply          = var.tfe_workspace_auto_apply
@@ -90,7 +89,7 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
     ManagedPolicyArns         = join(",", local.managed_policy_arns_by_environment[each.key])
     RepositoryFullName        = github_repository.this.full_name
     TerraformWorkspaceName    = local.workspace_names[each.key]
-    TerraformOrganizationName = var.tfe_organization
+    TerraformOrganizationName = tfe_workspace.this[each.key].organization
     EnvironmentName           = each.key
   }
 
