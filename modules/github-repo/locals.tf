@@ -116,7 +116,7 @@ locals {
     for environment, _ in local.terraform_environments :
     environment => merge(var.aws.tags, {
       ManagedBy  = "Terraform"
-      Module     = "terraform-github-repo"
+      Module     = "terraform-github-repository"
       Repository = github_repository.this.name
     })
   }

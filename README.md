@@ -9,6 +9,7 @@ The earlier manifest authoring, schema, and reconciliation work remains in `emka
 - `.forge/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there. The directory is gitignored and intentionally never committed to this public repository; it is supplied at plan/apply time from a private configuration repository (see [Manifests](#manifests)).
 - `modules/github-repo/` defines the GitHub repository module. It can create a standalone repository, or it can also create repo-backed HCP Terraform workspaces and AWS provisioner roles when `create_terraform_workspaces` is enabled.
 - `modules/github-repo/examples/basic/` shows a minimal standalone caller shape.
+- `modules/github-repo/examples/complete/` shows the full repo-backed HCP Terraform workspace and AWS provisioner role shape.
 
 The GitHub repository module always creates:
 
@@ -23,7 +24,7 @@ When Terraform workspaces are enabled, it also creates:
 
 ## Direction
 
-For now, this repository is the design and implementation space for the baseline architecture. Once the module contract settles, `modules/github-repo` can be extracted into a standalone Terraform module repository with minimal path churn.
+For now, this repository is the design and implementation space for the baseline architecture. Once the module contract settles, `modules/github-repo` can be extracted into a standalone `terraform-github-repository` module repository with minimal path churn.
 
 Keep public code, module contracts, and sanitized examples here. Real account IDs, operational manifests, tokens, and environment-specific values belong in private configuration.
 
@@ -38,7 +39,7 @@ Use one file per desired unit.
 Use `GitHubRepository` for a standalone non-Terraform GitHub repository:
 
 ```yaml
-apiVersion: anvil.example.io/v1alpha1
+apiVersion: anvil.emkaytec.dev/v1alpha1
 kind: GitHubRepository
 metadata:
   name: docs-site

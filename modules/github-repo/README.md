@@ -1,8 +1,8 @@
-# github-repo
+# GitHub Repository Module
 
 Terraform module for one GitHub repository. The module can manage a standalone GitHub repository, or it can also create repo-backed HCP Terraform workspaces, AWS provisioner IAM roles, CloudFormation StackSets, GitHub environments, and workspace variables when `create_terraform_workspaces` is enabled.
 
-This module currently lives inside `emkaytec/anvil`. It is intentionally shaped like an extractable Terraform module and is expected to move to its own repository later.
+This module currently lives inside `emkaytec/anvil`. It is intentionally shaped like an extractable Terraform module and is expected to move to a standalone `terraform-github-repository` repository later.
 
 ## Usage
 
