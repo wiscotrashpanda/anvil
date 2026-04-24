@@ -13,7 +13,7 @@ output "workspace" {
     id         = tfe_workspace.this.id
     name       = tfe_workspace.this.name
     html_url   = tfe_workspace.this.html_url
-    account_id = var.account_id
+    account_id = var.aws.account_id
     region     = local.environment_region
   }
 }

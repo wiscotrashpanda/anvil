@@ -1,22 +1,22 @@
 resource "tfe_workspace" "this" {
   name                = local.workspace_name
-  project_id          = var.tfe_project_id
+  project_id          = var.workspace.project_id
   description         = "Terraform workspace for ${var.github_repository} (${var.environment})."
-  auto_apply          = var.tfe_workspace_auto_apply
-  queue_all_runs      = var.tfe_workspace_queue_all_runs
-  speculative_enabled = var.tfe_workspace_speculative_enabled
-  terraform_version   = var.tfe_workspace_terraform_version
-  working_directory   = var.tfe_workspace_working_directory
-  tags = merge(var.tfe_workspace_tags, {
+  auto_apply          = var.workspace.auto_apply
+  queue_all_runs      = var.workspace.queue_all_runs
+  speculative_enabled = var.workspace.speculative_enabled
+  terraform_version   = var.workspace.terraform_version
+  working_directory   = var.workspace.working_directory
+  tags = merge(var.workspace.tags, {
     repository  = local.repository_name
     environment = var.environment
   })
 
-  trigger_patterns = local.use_tfe_vcs_repo ? try(var.tfe_vcs_repo.trigger_patterns, null) : null
-  trigger_prefixes = local.use_tfe_vcs_repo ? try(var.tfe_vcs_repo.trigger_prefixes, null) : null
+  trigger_patterns = local.use_tfe_vcs_repo ? try(var.workspace.vcs_repo.trigger_patterns, null) : null
+  trigger_prefixes = local.use_tfe_vcs_repo ? try(var.workspace.vcs_repo.trigger_prefixes, null) : null
 
   dynamic "vcs_repo" {
-    for_each = local.use_tfe_vcs_repo ? [var.tfe_vcs_repo] : []
+    for_each = local.use_tfe_vcs_repo ? [var.workspace.vcs_repo] : []
 
     content {
       identifier                 = var.github_repository
@@ -30,30 +30,30 @@ resource "tfe_workspace" "this" {
 
 resource "tfe_workspace_settings" "this" {
   workspace_id   = tfe_workspace.this.id
-  execution_mode = var.tfe_workspace_execution_mode
-  agent_pool_id  = var.tfe_workspace_agent_pool_id
+  execution_mode = var.workspace.execution_mode
+  agent_pool_id  = var.workspace.agent_pool_id
 }
 
 resource "aws_cloudformation_stack_set" "provisioner_roles" {
   name                    = local.stack_set_name
   description             = "Provisioner IAM role for ${var.github_repository} (${var.environment})."
-  permission_model        = var.stack_set_permission_model
-  call_as                 = var.stack_set_call_as
-  administration_role_arn = var.stack_set_permission_model == "SELF_MANAGED" ? var.stack_set_administration_role_arn : null
-  execution_role_name     = var.stack_set_permission_model == "SELF_MANAGED" ? var.stack_set_execution_role_name : null
+  permission_model        = var.aws.stack_set_permission_model
+  call_as                 = var.aws.stack_set_call_as
+  administration_role_arn = var.aws.stack_set_permission_model == "SELF_MANAGED" ? var.aws.stack_set_administration_role_arn : null
+  execution_role_name     = var.aws.stack_set_permission_model == "SELF_MANAGED" ? var.aws.stack_set_execution_role_name : null
   capabilities            = ["CAPABILITY_NAMED_IAM"]
   template_body = templatefile("${path.module}/templates/provisioner-roles.yaml.tftpl", {
-    github_oidc_provider_host = var.github_oidc_provider_host
+    github_oidc_provider_host = var.aws.github_oidc_provider_host
     repository_full_name      = var.github_repository
-    tfe_oidc_provider_host    = var.tfe_oidc_provider_host
+    tfe_oidc_provider_host    = var.aws.tfe_oidc_provider_host
   })
 
   parameters = {
-    GitHubOIDCAudience        = var.github_oidc_audience
+    GitHubOIDCAudience        = var.aws.github_oidc_audience
     GitHubOIDCSubject         = local.github_actions_subject
-    HCPTerraformOIDCAudience  = var.tfe_oidc_audience
+    HCPTerraformOIDCAudience  = var.aws.tfe_oidc_audience
     HCPTerraformOIDCSubject   = local.tfe_subject
-    ManagedPolicyArns         = join(",", var.managed_policy_arns)
+    ManagedPolicyArns         = join(",", var.aws.managed_policy_arns)
     ProvisionerRoleName       = local.provisioner_role_name
     RepositoryFullName        = var.github_repository
     TerraformWorkspaceName    = local.workspace_name
@@ -66,7 +66,7 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
   })
 
   dynamic "operation_preferences" {
-    for_each = var.stack_set_operation_preferences == null ? [] : [var.stack_set_operation_preferences]
+    for_each = var.aws.stack_set_operation_preferences == null ? [] : [var.aws.stack_set_operation_preferences]
 
     content {
       failure_tolerance_count      = try(operation_preferences.value.failure_tolerance_count, null)
@@ -80,21 +80,21 @@ resource "aws_cloudformation_stack_set" "provisioner_roles" {
 
   lifecycle {
     precondition {
-      condition     = var.stack_set_permission_model != "SELF_MANAGED" || var.stack_set_administration_role_arn != null
-      error_message = "stack_set_administration_role_arn is required when stack_set_permission_model is SELF_MANAGED."
+      condition     = var.aws.stack_set_permission_model != "SELF_MANAGED" || var.aws.stack_set_administration_role_arn != null
+      error_message = "aws.stack_set_administration_role_arn is required when aws.stack_set_permission_model is SELF_MANAGED."
     }
   }
 }
 
 resource "aws_cloudformation_stack_set_instance" "provisioner_roles" {
   stack_set_name            = aws_cloudformation_stack_set.provisioner_roles.name
-  account_id                = var.account_id
-  call_as                   = var.stack_set_call_as
+  account_id                = var.aws.account_id
+  call_as                   = var.aws.stack_set_call_as
   stack_set_instance_region = local.environment_region
-  retain_stack              = var.retain_stack_instances_on_destroy
+  retain_stack              = var.aws.retain_stack_instances_on_destroy
 
   dynamic "operation_preferences" {
-    for_each = var.stack_set_operation_preferences == null ? [] : [var.stack_set_operation_preferences]
+    for_each = var.aws.stack_set_operation_preferences == null ? [] : [var.aws.stack_set_operation_preferences]
 
     content {
       failure_tolerance_count      = try(operation_preferences.value.failure_tolerance_count, null)
@@ -108,17 +108,17 @@ resource "aws_cloudformation_stack_set_instance" "provisioner_roles" {
 }
 
 resource "tfe_variable" "account_id" {
-  count = var.manage_tfe_workspace_variables ? 1 : 0
+  count = var.workspace.manage_variables ? 1 : 0
 
   workspace_id = tfe_workspace.this.id
   key          = "account_id"
-  value        = var.account_id
+  value        = var.aws.account_id
   category     = "terraform"
   description  = "AWS account ID for this workspace environment."
 }
 
 resource "tfe_variable" "aws_region" {
-  count = var.manage_tfe_workspace_variables ? 1 : 0
+  count = var.workspace.manage_variables ? 1 : 0
 
   workspace_id = tfe_workspace.this.id
   key          = "aws_region"
@@ -128,7 +128,7 @@ resource "tfe_variable" "aws_region" {
 }
 
 resource "tfe_variable" "aws_region_env" {
-  count = var.manage_tfe_workspace_variables ? 1 : 0
+  count = var.workspace.manage_variables ? 1 : 0
 
   workspace_id = tfe_workspace.this.id
   key          = "AWS_REGION"
@@ -138,7 +138,7 @@ resource "tfe_variable" "aws_region_env" {
 }
 
 resource "tfe_variable" "tfc_aws_provider_auth" {
-  count = var.manage_tfe_workspace_variables ? 1 : 0
+  count = var.workspace.manage_variables ? 1 : 0
 
   workspace_id = tfe_workspace.this.id
   key          = "TFC_AWS_PROVIDER_AUTH"
@@ -148,7 +148,7 @@ resource "tfe_variable" "tfc_aws_provider_auth" {
 }
 
 resource "tfe_variable" "tfc_aws_run_role_arn" {
-  count = var.manage_tfe_workspace_variables ? 1 : 0
+  count = var.workspace.manage_variables ? 1 : 0
 
   workspace_id = tfe_workspace.this.id
   key          = "TFC_AWS_RUN_ROLE_ARN"
@@ -160,11 +160,11 @@ resource "tfe_variable" "tfc_aws_run_role_arn" {
 }
 
 resource "tfe_variable" "tfc_aws_workload_identity_audience" {
-  count = var.manage_tfe_workspace_variables ? 1 : 0
+  count = var.workspace.manage_variables ? 1 : 0
 
   workspace_id = tfe_workspace.this.id
   key          = "TFC_AWS_WORKLOAD_IDENTITY_AUDIENCE"
-  value        = var.tfe_oidc_audience
+  value        = var.aws.tfe_oidc_audience
   category     = "env"
   description  = "OIDC audience expected by the AWS IAM trust policy."
 }
@@ -185,7 +185,7 @@ resource "github_actions_environment_variable" "aws_account_id" {
   repository    = local.repository_name
   environment   = github_repository_environment.this.environment
   variable_name = "AWS_ACCOUNT_ID"
-  value         = var.account_id
+  value         = var.aws.account_id
 }
 
 resource "github_actions_environment_variable" "aws_provisioner_role_arn" {

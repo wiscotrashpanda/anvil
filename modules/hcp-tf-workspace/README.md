@@ -33,18 +33,22 @@ module "workspace" {
 
   github_repository = "emkaytec/sample-service"
   environment       = "dev"
-  account_id        = "111111111111"
 
-  tfe_workspace_terraform_version = "1.10.0"
-  tfe_workspace_working_directory = "terraform"
+  aws = {
+    account_id                         = "111111111111"
+    stack_set_administration_role_arn  = "arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole"
+  }
 
-  stack_set_administration_role_arn = "arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole"
+  workspace = {
+    terraform_version = "1.10.0"
+    working_directory = "terraform"
+  }
 }
 ```
 
 ## Notes
 
-- `workspace_name` defaults to `<repository>-<environment>` and is also the default naming base for the provisioner role and StackSet name.
-- `region` defaults to `us-east-1`.
-- When `tfe_vcs_repo` is set, the module uses `github_repository` as the HCP Terraform VCS identifier.
+- `workspace.name` defaults to `<repository>-<environment>` and is also the default naming base for the provisioner role and StackSet name.
+- `aws.region` defaults to `us-east-1`.
+- When `workspace.vcs_repo` is set, the module uses `github_repository` as the HCP Terraform VCS identifier.
 - The GitHub provider owner and TFE provider organization still come from the caller-level provider configuration.

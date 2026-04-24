@@ -50,5 +50,7 @@ module "repo" {
 
   environments = var.environments
 
-  stack_set_administration_role_arn = var.stack_set_administration_role_arn
+  aws = {
+    stack_set_administration_role_arn = var.stack_set_administration_role_arn
+  }
 }

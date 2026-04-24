@@ -45,25 +45,33 @@ module "repo" {
 
   environments = {
     dev = {
-      account_id = "111111111111"
+      aws = {
+        account_id = "111111111111"
+      }
     }
     prod = {
-      account_id          = "222222222222"
-      region              = "us-east-2"
-      managed_policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"]
+      aws = {
+        account_id          = "222222222222"
+        region              = "us-east-2"
+        managed_policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"]
+      }
     }
   }
 
-  stack_set_administration_role_arn = "arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole"
+  aws = {
+    stack_set_administration_role_arn = "arn:aws:iam::999999999999:role/AWSCloudFormationStackSetAdministrationRole"
+  }
 }
 ```
 
-By default, the module keeps HCP Terraform workspaces API/CLI-driven. Set `tfe_vcs_repo` when the workspace should be connected to the GitHub repository through an existing HCP Terraform VCS connection.
+By default, the module keeps HCP Terraform workspaces API/CLI-driven. Set `workspace.vcs_repo` when the workspace should be connected to the GitHub repository through an existing HCP Terraform VCS connection.
 
 ```hcl
-tfe_vcs_repo = {
-  oauth_token_id = "ot-..."
-  branch         = "main"
+workspace = {
+  vcs_repo = {
+    oauth_token_id = "ot-..."
+    branch         = "main"
+  }
 }
 ```
 
@@ -97,7 +105,7 @@ HCP Terraform workspace variables are created by default. `TFC_AWS_RUN_ROLE_ARN`
 - `TFC_AWS_RUN_ROLE_ARN`
 - `TFC_AWS_WORKLOAD_IDENTITY_AUDIENCE`
 
-Set `manage_tfe_workspace_variables = false` to leave workspace variables unmanaged.
+Set `workspace.manage_variables = false` to leave workspace variables unmanaged.
 
 ## OIDC Subject Defaults
 
@@ -110,7 +118,7 @@ repo:<repository.full_name>:*
 HCP Terraform defaults to the organization resolved by the TFE provider/workspace:
 
 ```text
-organization:<workspace.organization>:project:<tfe_project_name>:workspace:<workspace-name>:run_phase:*
+organization:<workspace.organization>:project:<workspace.project_name>:workspace:<workspace-name>:run_phase:*
 ```
 
-Use `github_actions_subject` or `tfe_subject` on an environment to narrow the corresponding trust statement.
+Use `aws.github_actions_subject` on an environment or `workspace.hcp_terraform_subject` to narrow the corresponding trust statement.

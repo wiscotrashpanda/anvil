@@ -18,6 +18,16 @@ check "github_owner_matches_hcp_tf_workspace_repo_paths" {
       length(split("/", trimspace(try(config.github_repository, "")))) == 2 &&
       split("/", trimspace(config.github_repository))[0] == var.github_owner
     ])
-    error_message = "HCPTerraformWorkspace spec.github_repository must use the same owner configured by github_owner."
+    error_message = "HCPTerraformWorkspace spec.githubRepository must use the same owner configured by github_owner."
+  }
+}
+
+check "hcp_tf_workspace_aws_targets_configured" {
+  assert {
+    condition = alltrue([
+      for _, config in local.hcp_tf_workspace_module_inputs :
+      can(regex("^[0-9]{12}$", config.aws.account_id))
+    ])
+    error_message = "HCPTerraformWorkspace spec.aws.accountId must be a 12-digit AWS account ID."
   }
 }
