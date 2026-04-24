@@ -6,7 +6,7 @@ locals {
   environment_region = coalesce(var.region, "us-east-1")
   workspace_name     = coalesce(var.workspace_name, "${local.repository_name}-${var.environment}")
 
-  provisioner_role_name = "${local.repository_name}-${var.environment}-provisioner-role"
+  provisioner_role_name = "${local.workspace_name}-provisioner-role"
   provisioner_role_arn  = "arn:${var.aws_partition}:iam::${var.account_id}:role/${local.provisioner_role_name}"
 
   github_actions_subject = coalesce(
