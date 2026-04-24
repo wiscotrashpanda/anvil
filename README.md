@@ -7,32 +7,23 @@ The earlier manifest authoring, schema, and reconciliation work remains in `emka
 ## Current Layout
 
 - `.forge/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there. The directory is gitignored and intentionally never committed to this public repository; it is supplied at plan/apply time from a private configuration repository (see [Manifests](#manifests)).
-- `modules/github-repo/` defines the shared GitHub repository creation module.
-- `modules/hcp-tf-workspace/` defines the reusable workspace-and-role module for one repo-backed HCP Terraform environment.
-- `modules/github-tf-repo/` defines the first extractable Terraform module for one repo-backed Terraform workload.
-- `modules/github-tf-repo/examples/basic/` shows a minimal caller shape.
+- `modules/github-repo/` defines the GitHub repository module. It can create a standalone repository, or it can also create repo-backed HCP Terraform workspaces and AWS provisioner roles when `create_terraform_workspaces` is enabled.
+- `modules/github-repo/examples/basic/` shows a minimal standalone caller shape.
 
-The standalone GitHub module creates:
+The GitHub repository module always creates:
 
 - one GitHub repository
 
-The standalone HCP Terraform environment module creates:
+When Terraform workspaces are enabled, it also creates:
 
-- one HCP Terraform workspace
-- one CloudFormation StackSet
-- one AWS IAM provisioner role
-- one GitHub environment with AWS variables for that environment
-
-The Terraform workload module creates:
-
-- one GitHub repository
 - one HCP Terraform workspace per environment
 - one CloudFormation StackSet per environment
 - one AWS IAM provisioner role per environment trusted by GitHub Actions and HCP Terraform
+- one GitHub environment with AWS variables per environment
 
 ## Direction
 
-For now, this repository is the design and implementation space for the baseline architecture. Once the module contracts settle, `modules/github-repo`, `modules/hcp-tf-workspace`, and `modules/github-tf-repo` can be extracted into standalone Terraform module repositories with minimal path churn.
+For now, this repository is the design and implementation space for the baseline architecture. Once the module contract settles, `modules/github-repo` can be extracted into a standalone Terraform module repository with minimal path churn.
 
 Keep public code, module contracts, and sanitized examples here. Real account IDs, operational manifests, tokens, and environment-specific values belong in private configuration.
 
@@ -71,14 +62,15 @@ spec:
       deleteBranchOnMerge: true
 ```
 
-Use `GitHubTerraformRepository` for a repo-backed Terraform workload:
+Set `createTerraformWorkspaces: true` on `GitHubRepository` for a repo-backed Terraform workload:
 
 ```yaml
 apiVersion: anvil.emkaytec.dev/v1alpha1
-kind: GitHubTerraformRepository
+kind: GitHubRepository
 metadata:
   name: sample-service
 spec:
+  createTerraformWorkspaces: true
   repository:
     description: Terraform-managed sample service.
     visibility: private
@@ -96,27 +88,7 @@ spec:
         region: us-east-2
 ```
 
-Standalone `GitHubRepository` manifests inherit their owner from the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration. `metadata.name` becomes the Terraform module key for either manifest kind and also defaults `spec.repository.name` for standalone repos when omitted.
-
-Under the hood, Anvil translates standalone `GitHubRepository` manifests into the same repository settings object used by `GitHubTerraformRepository.spec.repository`, so both Terraform module paths share one repository-creation interface and one set of defaults.
-
-Use `HCPTerraformWorkspace` when the GitHub repository already exists and you only want to add the Terraform workspace, GitHub environment wiring, and AWS provisioner role for one environment:
-
-```yaml
-apiVersion: anvil.emkaytec.dev/v1alpha1
-kind: HCPTerraformWorkspace
-metadata:
-  name: sample-service-dev
-spec:
-  githubRepository: emkaytec/sample-service
-  environment: dev
-  aws:
-    accountId: "111111111111"
-  workspace:
-    terraformVersion: "1.10.0"
-```
-
-`spec.githubRepository` must use the same owner configured by the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration.
+`GitHubRepository` manifests inherit their owner from the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration. `metadata.name` becomes the Terraform module key and also defaults `spec.repository.name` when omitted.
 
 ## Running Terraform
 
@@ -127,7 +99,7 @@ terraform init
 terraform plan
 ```
 
-Provider ownership is configured through the root module's explicit `default` provider aliases. `github_owner` is always required. `tfe_organization` and the shared StackSet role wiring are needed when you are planning `GitHubTerraformRepository` or `HCPTerraformWorkspace` manifests, and they belong in the ignored root `terraform.tfvars` file:
+Provider ownership is configured through the root module's explicit `default` provider aliases. `github_owner` is always required. `tfe_organization` and the shared StackSet role wiring are needed when any `GitHubRepository` creates Terraform workspaces, and they belong in the ignored root `terraform.tfvars` file:
 
 ```hcl
 github_owner     = "emkaytec"
