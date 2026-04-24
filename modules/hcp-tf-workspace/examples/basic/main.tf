@@ -44,9 +44,13 @@ module "workspace" {
 
   github_repository = var.github_repository
   environment       = var.environment
-  account_id        = var.account_id
 
-  tfe_workspace_terraform_version = "1.10.0"
+  aws = {
+    account_id                        = var.account_id
+    stack_set_administration_role_arn = var.stack_set_administration_role_arn
+  }
 
-  stack_set_administration_role_arn = var.stack_set_administration_role_arn
+  workspace = {
+    terraform_version = "1.10.0"
+  }
 }

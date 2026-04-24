@@ -20,10 +20,12 @@ variable "repository_name" {
 }
 
 variable "environments" {
-  description = "Environment-to-account map."
+  description = "Environment map."
   type = map(object({
-    account_id = string
-    region     = optional(string)
+    aws = object({
+      account_id = string
+      region     = optional(string)
+    })
   }))
 }
 

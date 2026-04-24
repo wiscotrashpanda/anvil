@@ -88,10 +88,12 @@ spec:
 
   environments:
     dev:
-      account_id: "111111111111"
+      aws:
+        accountId: "111111111111"
     prod:
-      account_id: "222222222222"
-      region: us-east-2
+      aws:
+        accountId: "222222222222"
+        region: us-east-2
 ```
 
 Standalone `GitHubRepository` manifests inherit their owner from the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration. `metadata.name` becomes the Terraform module key for either manifest kind and also defaults `spec.repository.name` for standalone repos when omitted.
@@ -106,13 +108,15 @@ kind: HCPTerraformWorkspace
 metadata:
   name: sample-service-dev
 spec:
-  github_repository: emkaytec/sample-service
+  githubRepository: emkaytec/sample-service
   environment: dev
-  account_id: "111111111111"
-  tfe_workspace_terraform_version: "1.10.0"
+  aws:
+    accountId: "111111111111"
+  workspace:
+    terraformVersion: "1.10.0"
 ```
 
-`spec.github_repository` must use the same owner configured by the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration.
+`spec.githubRepository` must use the same owner configured by the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration.
 
 ## Running Terraform
 
@@ -123,7 +127,7 @@ terraform init
 terraform plan
 ```
 
-Provider ownership is configured through the root module's explicit `emkaytec` provider aliases. `github_owner` is always required. `tfe_organization` and the shared StackSet role wiring are needed when you are planning `GitHubTerraformRepository` or `HCPTerraformWorkspace` manifests, and they belong in the ignored root `terraform.tfvars` file:
+Provider ownership is configured through the root module's explicit `default` provider aliases. `github_owner` is always required. `tfe_organization` and the shared StackSet role wiring are needed when you are planning `GitHubTerraformRepository` or `HCPTerraformWorkspace` manifests, and they belong in the ignored root `terraform.tfvars` file:
 
 ```hcl
 github_owner     = "emkaytec"
