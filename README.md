@@ -6,7 +6,7 @@ The earlier manifest authoring, schema, and reconciliation work remains in `emka
 
 ## Current Layout
 
-- `manifests/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there.
+- `.forge/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there. The directory is gitignored and intentionally never committed to this public repository; it is supplied at plan/apply time from a private configuration repository (see [Manifests](#manifests)).
 - `modules/github-repo/` defines the shared GitHub repository creation module.
 - `modules/hcp-tf-workspace/` defines the reusable workspace-and-role module for one repo-backed HCP Terraform environment.
 - `modules/github-tf-repo/` defines the first extractable Terraform module for one repo-backed Terraform workload.
@@ -38,7 +38,11 @@ Keep public code, module contracts, and sanitized examples here. Real account ID
 
 ## Manifests
 
-Create one private YAML file per desired unit under `manifests/`. Files ending in `.yaml` and `.yml` are ignored by Git so real desired state does not get committed to the public repository.
+Terraform reads desired state from YAML files in the root `.forge/` directory. The directory is gitignored and is not part of this repository; it is populated from a private manifests repository that owns all real account IDs, role ARNs, workspace settings, and other environment-specific values.
+
+In GitHub Actions, check out the private manifests repo at the same level so its `.forge/` directory lands at the root of this working tree and Terraform can read it in place. Locally, populate `.forge/` the same way (for example, by cloning or symlinking the private repo so its `.forge/` is visible at the repo root).
+
+Use one file per desired unit.
 
 Use `GitHubRepository` for a standalone non-Terraform GitHub repository:
 
@@ -78,12 +82,21 @@ spec:
   repository:
     description: Terraform-managed sample service.
     visibility: private
+    topics:
+      - aws
+      - terraform
+
   environments:
     dev:
       account_id: "111111111111"
+    prod:
+      account_id: "222222222222"
+      region: us-east-2
 ```
 
-Standalone `GitHubRepository` manifests are translated into the same repository settings object used by `modules/github-tf-repo`, so the underlying GitHub repository defaults and behaviors stay aligned across both Terraform module paths.
+Standalone `GitHubRepository` manifests inherit their owner from the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration. `metadata.name` becomes the Terraform module key for either manifest kind and also defaults `spec.repository.name` for standalone repos when omitted.
+
+Under the hood, Anvil translates standalone `GitHubRepository` manifests into the same repository settings object used by `GitHubTerraformRepository.spec.repository`, so both Terraform module paths share one repository-creation interface and one set of defaults.
 
 Use `HCPTerraformWorkspace` when the GitHub repository already exists and you only want to add the Terraform workspace, GitHub environment wiring, and AWS provisioner role for one environment:
 
@@ -99,16 +112,18 @@ spec:
   tfe_workspace_terraform_version: "1.10.0"
 ```
 
-Run Terraform from the repo root after placing private manifests in `manifests/`:
+`spec.github_repository` must use the same owner configured by the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration.
+
+## Running Terraform
+
+Run Terraform from the repo root once `.forge/` has been populated from the private manifests repository:
 
 ```bash
 terraform init
 terraform plan
 ```
 
-The root module uses explicit `emkaytec` provider aliases for GitHub and HCP Terraform. Set shared provider ownership once in an ignored root `terraform.tfvars` file. Standalone `GitHubRepository` manifests inherit their owner from `github_owner`, and direct `HCPTerraformWorkspace.spec.github_repository` values must use that same owner.
-
-When you are planning `GitHubTerraformRepository` or `HCPTerraformWorkspace` manifests, add the HCP Terraform organization and shared StackSet role wiring there too:
+Provider ownership is configured through the root module's explicit `emkaytec` provider aliases. `github_owner` is always required. `tfe_organization` and the shared StackSet role wiring are needed when you are planning `GitHubTerraformRepository` or `HCPTerraformWorkspace` manifests, and they belong in the ignored root `terraform.tfvars` file:
 
 ```hcl
 github_owner     = "emkaytec"

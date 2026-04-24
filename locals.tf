@@ -1,5 +1,5 @@
 locals {
-  manifest_directory = "${path.module}/manifests"
+  manifest_directory = "${path.module}/.forge"
 
   manifest_files = sort(tolist(setunion(
     fileset(local.manifest_directory, "*.yaml"),
