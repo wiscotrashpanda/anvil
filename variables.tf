@@ -1,5 +1,5 @@
 variable "github_owner" {
-  description = "GitHub user or organization configured on the root GitHub provider. Direct HCPTerraformWorkspace github_repository values must use this owner."
+  description = "GitHub user or organization configured on the root GitHub provider."
   type        = string
 
   validation {
@@ -9,7 +9,7 @@ variable "github_owner" {
 }
 
 variable "tfe_organization" {
-  description = "HCP Terraform organization configured on the root TFE provider. Required only when planning GitHubTerraformRepository or HCPTerraformWorkspace manifests."
+  description = "HCP Terraform organization configured on the root TFE provider. Required when any GitHubRepository creates Terraform workspaces."
   type        = string
   default     = null
 
