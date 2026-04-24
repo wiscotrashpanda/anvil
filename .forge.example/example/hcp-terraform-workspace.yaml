@@ -1,0 +1,39 @@
+apiVersion: anvil.emkaytec.dev/v1alpha1
+kind: HCPTerraformWorkspace
+metadata:
+  name: sample-service-dev
+spec:
+  github_repository: emkaytec/sample-service
+  environment: dev
+  account_id: "111111111111"
+  region: us-east-1
+
+  managed_policy_arns:
+    - arn:aws:iam::aws:policy/ReadOnlyAccess
+
+  tfe_project_name: sample-service
+  tfe_workspace_terraform_version: "1.10.0"
+  tfe_workspace_execution_mode: remote
+  tfe_workspace_auto_apply: false
+  tfe_workspace_queue_all_runs: true
+  tfe_workspace_speculative_enabled: true
+  tfe_workspace_working_directory: terraform
+  tfe_workspace_tags:
+    owner: platform
+    service: sample-service
+
+  tfe_vcs_repo:
+    branch: main
+    github_app_installation_id: 12345678
+    trigger_prefixes:
+      - terraform/
+
+  manage_tfe_workspace_variables: true
+
+  stack_set_permission_model: SELF_MANAGED
+  stack_set_call_as: SELF
+  retain_stack_instances_on_destroy: false
+
+  tags:
+    owner: platform
+    environment: dev
