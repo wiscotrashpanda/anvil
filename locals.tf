@@ -71,11 +71,13 @@ locals {
           try(manifest.spec.features.hasWiki, null),
         )
       } : {},
-      try(manifest.spec.mergePolicy.allowMergeCommit, null) != null || try(manifest.spec.allow_merge_commit, null) != null || try(manifest.spec.repository.mergePolicy.allowMergeCommit, null) != null || try(manifest.spec.repository.allow_merge_commit, null) != null ? {
+      try(manifest.spec.mergePolicy.allowMergeCommit, null) != null || try(manifest.spec.allowMergeCommit, null) != null || try(manifest.spec.allow_merge_commit, null) != null || try(manifest.spec.repository.mergePolicy.allowMergeCommit, null) != null || try(manifest.spec.repository.allowMergeCommit, null) != null || try(manifest.spec.repository.allow_merge_commit, null) != null ? {
         allow_merge_commit = coalesce(
           try(manifest.spec.repository.allow_merge_commit, null),
+          try(manifest.spec.repository.allowMergeCommit, null),
           try(manifest.spec.repository.mergePolicy.allowMergeCommit, null),
           try(manifest.spec.allow_merge_commit, null),
+          try(manifest.spec.allowMergeCommit, null),
           try(manifest.spec.mergePolicy.allowMergeCommit, null),
         )
       } : {},
@@ -132,81 +134,81 @@ locals {
     for name, manifest in local.hcp_tf_workspace_manifests :
     name => merge(
       {
-        github_repository = try(coalesce(manifest.spec.githubRepository, manifest.spec.github_repository), null)
+        github_repository = try(coalesce(try(manifest.spec.githubRepository, null), try(manifest.spec.github_repository, null)), null)
         environment       = try(manifest.spec.environment, null)
         aws = {
-          account_id                        = try(coalesce(manifest.spec.aws.accountId, manifest.spec.aws.account_id), null)
+          account_id                        = try(coalesce(try(manifest.spec.aws.accountId, null), try(manifest.spec.aws.account_id, null)), null)
           region                            = try(manifest.spec.aws.region, null)
           partition                         = try(manifest.spec.aws.partition, null)
-          managed_policy_arns               = try(coalesce(manifest.spec.aws.managedPolicyArns, manifest.spec.aws.managed_policy_arns, manifest.spec.managedPolicyArns, manifest.spec.managed_policy_arns), null)
-          github_actions_subject            = try(coalesce(manifest.spec.aws.githubActionsSubject, manifest.spec.aws.github_actions_subject, manifest.spec.githubActionsSubject, manifest.spec.github_actions_subject), null)
-          github_oidc_provider_host         = try(coalesce(manifest.spec.aws.githubOidcProviderHost, manifest.spec.aws.github_oidc_provider_host, manifest.spec.githubOidcProviderHost, manifest.spec.github_oidc_provider_host), null)
-          github_oidc_audience              = try(coalesce(manifest.spec.aws.githubOidcAudience, manifest.spec.aws.github_oidc_audience, manifest.spec.githubOidcAudience, manifest.spec.github_oidc_audience), null)
-          tfe_oidc_provider_host            = try(coalesce(manifest.spec.aws.tfeOidcProviderHost, manifest.spec.aws.tfe_oidc_provider_host, manifest.spec.tfeOidcProviderHost, manifest.spec.tfe_oidc_provider_host), null)
-          tfe_oidc_audience                 = try(coalesce(manifest.spec.aws.tfeOidcAudience, manifest.spec.aws.tfe_oidc_audience, manifest.spec.tfeOidcAudience, manifest.spec.tfe_oidc_audience), null)
-          stack_set_name_prefix             = try(coalesce(manifest.spec.aws.stackSetNamePrefix, manifest.spec.aws.stack_set_name_prefix, manifest.spec.stackSetNamePrefix, manifest.spec.stack_set_name_prefix), null)
-          stack_set_permission_model        = try(coalesce(manifest.spec.aws.stackSetPermissionModel, manifest.spec.aws.stack_set_permission_model, manifest.spec.stackSetPermissionModel, manifest.spec.stack_set_permission_model), null)
-          stack_set_call_as                 = try(coalesce(manifest.spec.aws.stackSetCallAs, manifest.spec.aws.stack_set_call_as, manifest.spec.stackSetCallAs, manifest.spec.stack_set_call_as), null)
-          stack_set_operation_preferences   = try(coalesce(manifest.spec.aws.stackSetOperationPreferences, manifest.spec.aws.stack_set_operation_preferences, manifest.spec.stackSetOperationPreferences, manifest.spec.stack_set_operation_preferences), null)
-          retain_stack_instances_on_destroy = try(coalesce(manifest.spec.aws.retainStackInstancesOnDestroy, manifest.spec.aws.retain_stack_instances_on_destroy, manifest.spec.retainStackInstancesOnDestroy, manifest.spec.retain_stack_instances_on_destroy), null)
-          tags                              = try(coalesce(manifest.spec.aws.tags, manifest.spec.tags), null)
+          managed_policy_arns               = try(coalesce(try(manifest.spec.aws.managedPolicyArns, null), try(manifest.spec.aws.managed_policy_arns, null), try(manifest.spec.managedPolicyArns, null), try(manifest.spec.managed_policy_arns, null)), null)
+          github_actions_subject            = try(coalesce(try(manifest.spec.aws.githubActionsSubject, null), try(manifest.spec.aws.github_actions_subject, null), try(manifest.spec.githubActionsSubject, null), try(manifest.spec.github_actions_subject, null)), null)
+          github_oidc_provider_host         = try(coalesce(try(manifest.spec.aws.githubOidcProviderHost, null), try(manifest.spec.aws.github_oidc_provider_host, null), try(manifest.spec.githubOidcProviderHost, null), try(manifest.spec.github_oidc_provider_host, null)), null)
+          github_oidc_audience              = try(coalesce(try(manifest.spec.aws.githubOidcAudience, null), try(manifest.spec.aws.github_oidc_audience, null), try(manifest.spec.githubOidcAudience, null), try(manifest.spec.github_oidc_audience, null)), null)
+          tfe_oidc_provider_host            = try(coalesce(try(manifest.spec.aws.tfeOidcProviderHost, null), try(manifest.spec.aws.tfe_oidc_provider_host, null), try(manifest.spec.tfeOidcProviderHost, null), try(manifest.spec.tfe_oidc_provider_host, null)), null)
+          tfe_oidc_audience                 = try(coalesce(try(manifest.spec.aws.tfeOidcAudience, null), try(manifest.spec.aws.tfe_oidc_audience, null), try(manifest.spec.tfeOidcAudience, null), try(manifest.spec.tfe_oidc_audience, null)), null)
+          stack_set_name_prefix             = try(coalesce(try(manifest.spec.aws.stackSetNamePrefix, null), try(manifest.spec.aws.stack_set_name_prefix, null), try(manifest.spec.stackSetNamePrefix, null), try(manifest.spec.stack_set_name_prefix, null)), null)
+          stack_set_permission_model        = try(coalesce(try(manifest.spec.aws.stackSetPermissionModel, null), try(manifest.spec.aws.stack_set_permission_model, null), try(manifest.spec.stackSetPermissionModel, null), try(manifest.spec.stack_set_permission_model, null)), null)
+          stack_set_call_as                 = try(coalesce(try(manifest.spec.aws.stackSetCallAs, null), try(manifest.spec.aws.stack_set_call_as, null), try(manifest.spec.stackSetCallAs, null), try(manifest.spec.stack_set_call_as, null)), null)
+          stack_set_operation_preferences   = try(coalesce(try(manifest.spec.aws.stackSetOperationPreferences, null), try(manifest.spec.aws.stack_set_operation_preferences, null), try(manifest.spec.stackSetOperationPreferences, null), try(manifest.spec.stack_set_operation_preferences, null)), null)
+          retain_stack_instances_on_destroy = try(coalesce(try(manifest.spec.aws.retainStackInstancesOnDestroy, null), try(manifest.spec.aws.retain_stack_instances_on_destroy, null), try(manifest.spec.retainStackInstancesOnDestroy, null), try(manifest.spec.retain_stack_instances_on_destroy, null)), null)
+          tags                              = try(coalesce(try(manifest.spec.aws.tags, null), try(manifest.spec.tags, null)), null)
         }
         workspace = {
           name                  = try(manifest.spec.workspace.name, null)
-          project_id            = try(coalesce(manifest.spec.workspace.projectId, manifest.spec.workspace.project_id), null)
-          project_name          = try(coalesce(manifest.spec.workspace.projectName, manifest.spec.workspace.project_name), null)
-          execution_mode        = try(coalesce(manifest.spec.workspace.executionMode, manifest.spec.workspace.execution_mode), null)
-          agent_pool_id         = try(coalesce(manifest.spec.workspace.agentPoolId, manifest.spec.workspace.agent_pool_id), null)
-          terraform_version     = try(coalesce(manifest.spec.workspace.terraformVersion, manifest.spec.workspace.terraform_version), null)
-          auto_apply            = try(coalesce(manifest.spec.workspace.autoApply, manifest.spec.workspace.auto_apply), null)
-          queue_all_runs        = try(coalesce(manifest.spec.workspace.queueAllRuns, manifest.spec.workspace.queue_all_runs), null)
-          speculative_enabled   = try(coalesce(manifest.spec.workspace.speculativeEnabled, manifest.spec.workspace.speculative_enabled), null)
-          working_directory     = try(coalesce(manifest.spec.workspace.workingDirectory, manifest.spec.workspace.working_directory), null)
+          project_id            = try(coalesce(try(manifest.spec.workspace.projectId, null), try(manifest.spec.workspace.project_id, null)), null)
+          project_name          = try(coalesce(try(manifest.spec.workspace.projectName, null), try(manifest.spec.workspace.project_name, null)), null)
+          execution_mode        = try(coalesce(try(manifest.spec.workspace.executionMode, null), try(manifest.spec.workspace.execution_mode, null)), null)
+          agent_pool_id         = try(coalesce(try(manifest.spec.workspace.agentPoolId, null), try(manifest.spec.workspace.agent_pool_id, null)), null)
+          terraform_version     = try(coalesce(try(manifest.spec.workspace.terraformVersion, null), try(manifest.spec.workspace.terraform_version, null)), null)
+          auto_apply            = try(coalesce(try(manifest.spec.workspace.autoApply, null), try(manifest.spec.workspace.auto_apply, null)), null)
+          queue_all_runs        = try(coalesce(try(manifest.spec.workspace.queueAllRuns, null), try(manifest.spec.workspace.queue_all_runs, null)), null)
+          speculative_enabled   = try(coalesce(try(manifest.spec.workspace.speculativeEnabled, null), try(manifest.spec.workspace.speculative_enabled, null)), null)
+          working_directory     = try(coalesce(try(manifest.spec.workspace.workingDirectory, null), try(manifest.spec.workspace.working_directory, null)), null)
           tags                  = try(manifest.spec.workspace.tags, null)
-          manage_variables      = try(coalesce(manifest.spec.workspace.manageVariables, manifest.spec.workspace.manage_variables), null)
-          hcp_terraform_subject = try(coalesce(manifest.spec.workspace.hcpTerraformSubject, manifest.spec.workspace.hcp_terraform_subject), null)
-          vcs_repo = try(coalesce(manifest.spec.workspace.vcsRepo, manifest.spec.workspace.vcs_repo), null) == null ? null : {
-            branch                     = try(coalesce(manifest.spec.workspace.vcsRepo.branch, manifest.spec.workspace.vcs_repo.branch), null)
-            oauth_token_id             = try(coalesce(manifest.spec.workspace.vcsRepo.oauthTokenId, manifest.spec.workspace.vcs_repo.oauth_token_id), null)
-            github_app_installation_id = try(coalesce(manifest.spec.workspace.vcsRepo.githubAppInstallationId, manifest.spec.workspace.vcs_repo.github_app_installation_id), null)
-            ingress_submodules         = try(coalesce(manifest.spec.workspace.vcsRepo.ingressSubmodules, manifest.spec.workspace.vcs_repo.ingress_submodules), null)
-            trigger_patterns           = try(coalesce(manifest.spec.workspace.vcsRepo.triggerPatterns, manifest.spec.workspace.vcs_repo.trigger_patterns), null)
-            trigger_prefixes           = try(coalesce(manifest.spec.workspace.vcsRepo.triggerPrefixes, manifest.spec.workspace.vcs_repo.trigger_prefixes), null)
+          manage_variables      = try(coalesce(try(manifest.spec.workspace.manageVariables, null), try(manifest.spec.workspace.manage_variables, null)), null)
+          hcp_terraform_subject = try(coalesce(try(manifest.spec.workspace.hcpTerraformSubject, null), try(manifest.spec.workspace.hcp_terraform_subject, null)), null)
+          vcs_repo = try(coalesce(try(manifest.spec.workspace.vcsRepo, null), try(manifest.spec.workspace.vcs_repo, null)), null) == null ? null : {
+            branch                     = try(coalesce(try(manifest.spec.workspace.vcsRepo.branch, null), try(manifest.spec.workspace.vcs_repo.branch, null)), null)
+            oauth_token_id             = try(coalesce(try(manifest.spec.workspace.vcsRepo.oauthTokenId, null), try(manifest.spec.workspace.vcs_repo.oauth_token_id, null)), null)
+            github_app_installation_id = try(coalesce(try(manifest.spec.workspace.vcsRepo.githubAppInstallationId, null), try(manifest.spec.workspace.vcs_repo.github_app_installation_id, null)), null)
+            ingress_submodules         = try(coalesce(try(manifest.spec.workspace.vcsRepo.ingressSubmodules, null), try(manifest.spec.workspace.vcs_repo.ingress_submodules, null)), null)
+            trigger_patterns           = try(coalesce(try(manifest.spec.workspace.vcsRepo.triggerPatterns, null), try(manifest.spec.workspace.vcs_repo.trigger_patterns, null)), null)
+            trigger_prefixes           = try(coalesce(try(manifest.spec.workspace.vcsRepo.triggerPrefixes, null), try(manifest.spec.workspace.vcs_repo.trigger_prefixes, null)), null)
           }
         }
       },
-      try(coalesce(manifest.spec.managedPolicyArns, manifest.spec.managed_policy_arns), null) == null ? {} : {
-        managed_policy_arns = try(coalesce(manifest.spec.managedPolicyArns, manifest.spec.managed_policy_arns), null)
+      try(coalesce(try(manifest.spec.managedPolicyArns, null), try(manifest.spec.managed_policy_arns, null)), null) == null ? {} : {
+        managed_policy_arns = try(coalesce(try(manifest.spec.managedPolicyArns, null), try(manifest.spec.managed_policy_arns, null)), null)
       },
-      try(coalesce(manifest.spec.githubActionsSubject, manifest.spec.github_actions_subject), null) == null ? {} : {
-        github_actions_subject = try(coalesce(manifest.spec.githubActionsSubject, manifest.spec.github_actions_subject), null)
+      try(coalesce(try(manifest.spec.githubActionsSubject, null), try(manifest.spec.github_actions_subject, null)), null) == null ? {} : {
+        github_actions_subject = try(coalesce(try(manifest.spec.githubActionsSubject, null), try(manifest.spec.github_actions_subject, null)), null)
       },
-      try(coalesce(manifest.spec.githubOidcProviderHost, manifest.spec.github_oidc_provider_host), null) == null ? {} : {
-        github_oidc_provider_host = try(coalesce(manifest.spec.githubOidcProviderHost, manifest.spec.github_oidc_provider_host), null)
+      try(coalesce(try(manifest.spec.githubOidcProviderHost, null), try(manifest.spec.github_oidc_provider_host, null)), null) == null ? {} : {
+        github_oidc_provider_host = try(coalesce(try(manifest.spec.githubOidcProviderHost, null), try(manifest.spec.github_oidc_provider_host, null)), null)
       },
-      try(coalesce(manifest.spec.githubOidcAudience, manifest.spec.github_oidc_audience), null) == null ? {} : {
-        github_oidc_audience = try(coalesce(manifest.spec.githubOidcAudience, manifest.spec.github_oidc_audience), null)
+      try(coalesce(try(manifest.spec.githubOidcAudience, null), try(manifest.spec.github_oidc_audience, null)), null) == null ? {} : {
+        github_oidc_audience = try(coalesce(try(manifest.spec.githubOidcAudience, null), try(manifest.spec.github_oidc_audience, null)), null)
       },
-      try(coalesce(manifest.spec.tfeOidcProviderHost, manifest.spec.tfe_oidc_provider_host), null) == null ? {} : {
-        tfe_oidc_provider_host = try(coalesce(manifest.spec.tfeOidcProviderHost, manifest.spec.tfe_oidc_provider_host), null)
+      try(coalesce(try(manifest.spec.tfeOidcProviderHost, null), try(manifest.spec.tfe_oidc_provider_host, null)), null) == null ? {} : {
+        tfe_oidc_provider_host = try(coalesce(try(manifest.spec.tfeOidcProviderHost, null), try(manifest.spec.tfe_oidc_provider_host, null)), null)
       },
-      try(coalesce(manifest.spec.tfeOidcAudience, manifest.spec.tfe_oidc_audience), null) == null ? {} : {
-        tfe_oidc_audience = try(coalesce(manifest.spec.tfeOidcAudience, manifest.spec.tfe_oidc_audience), null)
+      try(coalesce(try(manifest.spec.tfeOidcAudience, null), try(manifest.spec.tfe_oidc_audience, null)), null) == null ? {} : {
+        tfe_oidc_audience = try(coalesce(try(manifest.spec.tfeOidcAudience, null), try(manifest.spec.tfe_oidc_audience, null)), null)
       },
-      try(coalesce(manifest.spec.stackSetNamePrefix, manifest.spec.stack_set_name_prefix), null) == null ? {} : {
-        stack_set_name_prefix = try(coalesce(manifest.spec.stackSetNamePrefix, manifest.spec.stack_set_name_prefix), null)
+      try(coalesce(try(manifest.spec.stackSetNamePrefix, null), try(manifest.spec.stack_set_name_prefix, null)), null) == null ? {} : {
+        stack_set_name_prefix = try(coalesce(try(manifest.spec.stackSetNamePrefix, null), try(manifest.spec.stack_set_name_prefix, null)), null)
       },
-      try(coalesce(manifest.spec.stackSetPermissionModel, manifest.spec.stack_set_permission_model), null) == null ? {} : {
-        stack_set_permission_model = try(coalesce(manifest.spec.stackSetPermissionModel, manifest.spec.stack_set_permission_model), null)
+      try(coalesce(try(manifest.spec.stackSetPermissionModel, null), try(manifest.spec.stack_set_permission_model, null)), null) == null ? {} : {
+        stack_set_permission_model = try(coalesce(try(manifest.spec.stackSetPermissionModel, null), try(manifest.spec.stack_set_permission_model, null)), null)
       },
-      try(coalesce(manifest.spec.stackSetCallAs, manifest.spec.stack_set_call_as), null) == null ? {} : {
-        stack_set_call_as = try(coalesce(manifest.spec.stackSetCallAs, manifest.spec.stack_set_call_as), null)
+      try(coalesce(try(manifest.spec.stackSetCallAs, null), try(manifest.spec.stack_set_call_as, null)), null) == null ? {} : {
+        stack_set_call_as = try(coalesce(try(manifest.spec.stackSetCallAs, null), try(manifest.spec.stack_set_call_as, null)), null)
       },
-      try(coalesce(manifest.spec.stackSetOperationPreferences, manifest.spec.stack_set_operation_preferences), null) == null ? {} : {
-        stack_set_operation_preferences = try(coalesce(manifest.spec.stackSetOperationPreferences, manifest.spec.stack_set_operation_preferences), null)
+      try(coalesce(try(manifest.spec.stackSetOperationPreferences, null), try(manifest.spec.stack_set_operation_preferences, null)), null) == null ? {} : {
+        stack_set_operation_preferences = try(coalesce(try(manifest.spec.stackSetOperationPreferences, null), try(manifest.spec.stack_set_operation_preferences, null)), null)
       },
-      try(coalesce(manifest.spec.retainStackInstancesOnDestroy, manifest.spec.retain_stack_instances_on_destroy), null) == null ? {} : {
-        retain_stack_instances_on_destroy = try(coalesce(manifest.spec.retainStackInstancesOnDestroy, manifest.spec.retain_stack_instances_on_destroy), null)
+      try(coalesce(try(manifest.spec.retainStackInstancesOnDestroy, null), try(manifest.spec.retain_stack_instances_on_destroy, null)), null) == null ? {} : {
+        retain_stack_instances_on_destroy = try(coalesce(try(manifest.spec.retainStackInstancesOnDestroy, null), try(manifest.spec.retain_stack_instances_on_destroy, null)), null)
       },
       try(manifest.spec.tags, null) == null ? {} : {
         tags = try(manifest.spec.tags, null)
@@ -268,9 +270,10 @@ locals {
             try(manifest.spec.repository.features.hasDiscussions, null),
           )
         } : {},
-        try(manifest.spec.repository.mergePolicy.allowMergeCommit, null) != null || try(manifest.spec.repository.allow_merge_commit, null) != null ? {
+        try(manifest.spec.repository.mergePolicy.allowMergeCommit, null) != null || try(manifest.spec.repository.allowMergeCommit, null) != null || try(manifest.spec.repository.allow_merge_commit, null) != null ? {
           allow_merge_commit = coalesce(
             try(manifest.spec.repository.allow_merge_commit, null),
+            try(manifest.spec.repository.allowMergeCommit, null),
             try(manifest.spec.repository.mergePolicy.allowMergeCommit, null),
           )
         } : {},
@@ -298,92 +301,92 @@ locals {
         environment => merge(
           {
             aws = {
-              account_id             = try(coalesce(config.aws.accountId, config.aws.account_id), null)
+              account_id             = try(coalesce(try(config.aws.accountId, null), try(config.aws.account_id, null)), null)
               region                 = try(config.aws.region, null)
               partition              = try(config.aws.partition, null)
-              managed_policy_arns    = try(coalesce(config.aws.managedPolicyArns, config.aws.managed_policy_arns, config.managedPolicyArns, config.managed_policy_arns), null)
-              github_actions_subject = try(coalesce(config.aws.githubActionsSubject, config.aws.github_actions_subject, config.githubActionsSubject, config.github_actions_subject), null)
+              managed_policy_arns    = try(coalesce(try(config.aws.managedPolicyArns, null), try(config.aws.managed_policy_arns, null), try(config.managedPolicyArns, null), try(config.managed_policy_arns, null)), null)
+              github_actions_subject = try(coalesce(try(config.aws.githubActionsSubject, null), try(config.aws.github_actions_subject, null), try(config.githubActionsSubject, null), try(config.github_actions_subject, null)), null)
             }
-            workspace = try(coalesce(config.workspace, null), null) == null ? null : {
+            workspace = try(config.workspace, null) == null ? null : {
               name                  = try(config.workspace.name, null)
-              project_id            = try(coalesce(config.workspace.projectId, config.workspace.project_id), null)
-              project_name          = try(coalesce(config.workspace.projectName, config.workspace.project_name), null)
-              execution_mode        = try(coalesce(config.workspace.executionMode, config.workspace.execution_mode), null)
-              agent_pool_id         = try(coalesce(config.workspace.agentPoolId, config.workspace.agent_pool_id), null)
-              terraform_version     = try(coalesce(config.workspace.terraformVersion, config.workspace.terraform_version), null)
-              auto_apply            = try(coalesce(config.workspace.autoApply, config.workspace.auto_apply), null)
-              queue_all_runs        = try(coalesce(config.workspace.queueAllRuns, config.workspace.queue_all_runs), null)
-              speculative_enabled   = try(coalesce(config.workspace.speculativeEnabled, config.workspace.speculative_enabled), null)
-              working_directory     = try(coalesce(config.workspace.workingDirectory, config.workspace.working_directory), null)
+              project_id            = try(coalesce(try(config.workspace.projectId, null), try(config.workspace.project_id, null)), null)
+              project_name          = try(coalesce(try(config.workspace.projectName, null), try(config.workspace.project_name, null)), null)
+              execution_mode        = try(coalesce(try(config.workspace.executionMode, null), try(config.workspace.execution_mode, null)), null)
+              agent_pool_id         = try(coalesce(try(config.workspace.agentPoolId, null), try(config.workspace.agent_pool_id, null)), null)
+              terraform_version     = try(coalesce(try(config.workspace.terraformVersion, null), try(config.workspace.terraform_version, null)), null)
+              auto_apply            = try(coalesce(try(config.workspace.autoApply, null), try(config.workspace.auto_apply, null)), null)
+              queue_all_runs        = try(coalesce(try(config.workspace.queueAllRuns, null), try(config.workspace.queue_all_runs, null)), null)
+              speculative_enabled   = try(coalesce(try(config.workspace.speculativeEnabled, null), try(config.workspace.speculative_enabled, null)), null)
+              working_directory     = try(coalesce(try(config.workspace.workingDirectory, null), try(config.workspace.working_directory, null)), null)
               tags                  = try(config.workspace.tags, null)
-              manage_variables      = try(coalesce(config.workspace.manageVariables, config.workspace.manage_variables), null)
-              hcp_terraform_subject = try(coalesce(config.workspace.hcpTerraformSubject, config.workspace.hcp_terraform_subject), null)
-              vcs_repo = try(coalesce(config.workspace.vcsRepo, config.workspace.vcs_repo), null) == null ? null : {
-                branch                     = try(coalesce(config.workspace.vcsRepo.branch, config.workspace.vcs_repo.branch), null)
-                oauth_token_id             = try(coalesce(config.workspace.vcsRepo.oauthTokenId, config.workspace.vcs_repo.oauth_token_id), null)
-                github_app_installation_id = try(coalesce(config.workspace.vcsRepo.githubAppInstallationId, config.workspace.vcs_repo.github_app_installation_id), null)
-                ingress_submodules         = try(coalesce(config.workspace.vcsRepo.ingressSubmodules, config.workspace.vcs_repo.ingress_submodules), null)
-                trigger_patterns           = try(coalesce(config.workspace.vcsRepo.triggerPatterns, config.workspace.vcs_repo.trigger_patterns), null)
-                trigger_prefixes           = try(coalesce(config.workspace.vcsRepo.triggerPrefixes, config.workspace.vcs_repo.trigger_prefixes), null)
+              manage_variables      = try(coalesce(try(config.workspace.manageVariables, null), try(config.workspace.manage_variables, null)), null)
+              hcp_terraform_subject = try(coalesce(try(config.workspace.hcpTerraformSubject, null), try(config.workspace.hcp_terraform_subject, null)), null)
+              vcs_repo = try(coalesce(try(config.workspace.vcsRepo, null), try(config.workspace.vcs_repo, null)), null) == null ? null : {
+                branch                     = try(coalesce(try(config.workspace.vcsRepo.branch, null), try(config.workspace.vcs_repo.branch, null)), null)
+                oauth_token_id             = try(coalesce(try(config.workspace.vcsRepo.oauthTokenId, null), try(config.workspace.vcs_repo.oauth_token_id, null)), null)
+                github_app_installation_id = try(coalesce(try(config.workspace.vcsRepo.githubAppInstallationId, null), try(config.workspace.vcs_repo.github_app_installation_id, null)), null)
+                ingress_submodules         = try(coalesce(try(config.workspace.vcsRepo.ingressSubmodules, null), try(config.workspace.vcs_repo.ingress_submodules, null)), null)
+                trigger_patterns           = try(coalesce(try(config.workspace.vcsRepo.triggerPatterns, null), try(config.workspace.vcs_repo.trigger_patterns, null)), null)
+                trigger_prefixes           = try(coalesce(try(config.workspace.vcsRepo.triggerPrefixes, null), try(config.workspace.vcs_repo.trigger_prefixes, null)), null)
               }
             }
           },
-          try(coalesce(config.managedPolicyArns, config.managed_policy_arns), null) == null ? {} : {
-            managed_policy_arns = try(coalesce(config.managedPolicyArns, config.managed_policy_arns), null)
+          try(coalesce(try(config.managedPolicyArns, null), try(config.managed_policy_arns, null)), null) == null ? {} : {
+            managed_policy_arns = try(coalesce(try(config.managedPolicyArns, null), try(config.managed_policy_arns, null)), null)
           },
-          try(coalesce(config.githubActionsSubject, config.github_actions_subject), null) == null ? {} : {
-            github_actions_subject = try(coalesce(config.githubActionsSubject, config.github_actions_subject), null)
+          try(coalesce(try(config.githubActionsSubject, null), try(config.github_actions_subject, null)), null) == null ? {} : {
+            github_actions_subject = try(coalesce(try(config.githubActionsSubject, null), try(config.github_actions_subject, null)), null)
           },
         )
       }
       aws = {
         region                            = try(manifest.spec.aws.region, null)
         partition                         = try(manifest.spec.aws.partition, null)
-        managed_policy_arns               = try(coalesce(manifest.spec.aws.managedPolicyArns, manifest.spec.aws.managed_policy_arns, manifest.spec.managedPolicyArns, manifest.spec.managed_policy_arns), null)
-        github_oidc_provider_host         = try(coalesce(manifest.spec.aws.githubOidcProviderHost, manifest.spec.aws.github_oidc_provider_host, manifest.spec.githubOidcProviderHost, manifest.spec.github_oidc_provider_host), null)
-        github_oidc_audience              = try(coalesce(manifest.spec.aws.githubOidcAudience, manifest.spec.aws.github_oidc_audience, manifest.spec.githubOidcAudience, manifest.spec.github_oidc_audience), null)
-        tfe_oidc_provider_host            = try(coalesce(manifest.spec.aws.tfeOidcProviderHost, manifest.spec.aws.tfe_oidc_provider_host, manifest.spec.tfeOidcProviderHost, manifest.spec.tfe_oidc_provider_host), null)
-        tfe_oidc_audience                 = try(coalesce(manifest.spec.aws.tfeOidcAudience, manifest.spec.aws.tfe_oidc_audience, manifest.spec.tfeOidcAudience, manifest.spec.tfe_oidc_audience), null)
-        stack_set_name_prefix             = try(coalesce(manifest.spec.aws.stackSetNamePrefix, manifest.spec.aws.stack_set_name_prefix, manifest.spec.stackSetNamePrefix, manifest.spec.stack_set_name_prefix), null)
-        stack_set_permission_model        = try(coalesce(manifest.spec.aws.stackSetPermissionModel, manifest.spec.aws.stack_set_permission_model, manifest.spec.stackSetPermissionModel, manifest.spec.stack_set_permission_model), null)
-        stack_set_call_as                 = try(coalesce(manifest.spec.aws.stackSetCallAs, manifest.spec.aws.stack_set_call_as, manifest.spec.stackSetCallAs, manifest.spec.stack_set_call_as), null)
-        stack_set_operation_preferences   = try(coalesce(manifest.spec.aws.stackSetOperationPreferences, manifest.spec.aws.stack_set_operation_preferences, manifest.spec.stackSetOperationPreferences, manifest.spec.stack_set_operation_preferences), null)
-        retain_stack_instances_on_destroy = try(coalesce(manifest.spec.aws.retainStackInstancesOnDestroy, manifest.spec.aws.retain_stack_instances_on_destroy, manifest.spec.retainStackInstancesOnDestroy, manifest.spec.retain_stack_instances_on_destroy), null)
-        tags                              = try(coalesce(manifest.spec.aws.tags, manifest.spec.tags), null)
+        managed_policy_arns               = try(coalesce(try(manifest.spec.aws.managedPolicyArns, null), try(manifest.spec.aws.managed_policy_arns, null), try(manifest.spec.managedPolicyArns, null), try(manifest.spec.managed_policy_arns, null)), null)
+        github_oidc_provider_host         = try(coalesce(try(manifest.spec.aws.githubOidcProviderHost, null), try(manifest.spec.aws.github_oidc_provider_host, null), try(manifest.spec.githubOidcProviderHost, null), try(manifest.spec.github_oidc_provider_host, null)), null)
+        github_oidc_audience              = try(coalesce(try(manifest.spec.aws.githubOidcAudience, null), try(manifest.spec.aws.github_oidc_audience, null), try(manifest.spec.githubOidcAudience, null), try(manifest.spec.github_oidc_audience, null)), null)
+        tfe_oidc_provider_host            = try(coalesce(try(manifest.spec.aws.tfeOidcProviderHost, null), try(manifest.spec.aws.tfe_oidc_provider_host, null), try(manifest.spec.tfeOidcProviderHost, null), try(manifest.spec.tfe_oidc_provider_host, null)), null)
+        tfe_oidc_audience                 = try(coalesce(try(manifest.spec.aws.tfeOidcAudience, null), try(manifest.spec.aws.tfe_oidc_audience, null), try(manifest.spec.tfeOidcAudience, null), try(manifest.spec.tfe_oidc_audience, null)), null)
+        stack_set_name_prefix             = try(coalesce(try(manifest.spec.aws.stackSetNamePrefix, null), try(manifest.spec.aws.stack_set_name_prefix, null), try(manifest.spec.stackSetNamePrefix, null), try(manifest.spec.stack_set_name_prefix, null)), null)
+        stack_set_permission_model        = try(coalesce(try(manifest.spec.aws.stackSetPermissionModel, null), try(manifest.spec.aws.stack_set_permission_model, null), try(manifest.spec.stackSetPermissionModel, null), try(manifest.spec.stack_set_permission_model, null)), null)
+        stack_set_call_as                 = try(coalesce(try(manifest.spec.aws.stackSetCallAs, null), try(manifest.spec.aws.stack_set_call_as, null), try(manifest.spec.stackSetCallAs, null), try(manifest.spec.stack_set_call_as, null)), null)
+        stack_set_operation_preferences   = try(coalesce(try(manifest.spec.aws.stackSetOperationPreferences, null), try(manifest.spec.aws.stack_set_operation_preferences, null), try(manifest.spec.stackSetOperationPreferences, null), try(manifest.spec.stack_set_operation_preferences, null)), null)
+        retain_stack_instances_on_destroy = try(coalesce(try(manifest.spec.aws.retainStackInstancesOnDestroy, null), try(manifest.spec.aws.retain_stack_instances_on_destroy, null), try(manifest.spec.retainStackInstancesOnDestroy, null), try(manifest.spec.retain_stack_instances_on_destroy, null)), null)
+        tags                              = try(coalesce(try(manifest.spec.aws.tags, null), try(manifest.spec.tags, null)), null)
       }
-      workspace = try(coalesce(manifest.spec.workspace, null), null) == null ? {} : {
+      workspace = {
         name                  = try(manifest.spec.workspace.name, null)
-        project_id            = try(coalesce(manifest.spec.workspace.projectId, manifest.spec.workspace.project_id), null)
-        project_name          = try(coalesce(manifest.spec.workspace.projectName, manifest.spec.workspace.project_name), null)
-        execution_mode        = try(coalesce(manifest.spec.workspace.executionMode, manifest.spec.workspace.execution_mode), null)
-        agent_pool_id         = try(coalesce(manifest.spec.workspace.agentPoolId, manifest.spec.workspace.agent_pool_id), null)
-        terraform_version     = try(coalesce(manifest.spec.workspace.terraformVersion, manifest.spec.workspace.terraform_version), null)
-        auto_apply            = try(coalesce(manifest.spec.workspace.autoApply, manifest.spec.workspace.auto_apply), null)
-        queue_all_runs        = try(coalesce(manifest.spec.workspace.queueAllRuns, manifest.spec.workspace.queue_all_runs), null)
-        speculative_enabled   = try(coalesce(manifest.spec.workspace.speculativeEnabled, manifest.spec.workspace.speculative_enabled), null)
-        working_directory     = try(coalesce(manifest.spec.workspace.workingDirectory, manifest.spec.workspace.working_directory), null)
+        project_id            = try(coalesce(try(manifest.spec.workspace.projectId, null), try(manifest.spec.workspace.project_id, null)), null)
+        project_name          = try(coalesce(try(manifest.spec.workspace.projectName, null), try(manifest.spec.workspace.project_name, null)), null)
+        execution_mode        = try(coalesce(try(manifest.spec.workspace.executionMode, null), try(manifest.spec.workspace.execution_mode, null)), null)
+        agent_pool_id         = try(coalesce(try(manifest.spec.workspace.agentPoolId, null), try(manifest.spec.workspace.agent_pool_id, null)), null)
+        terraform_version     = try(coalesce(try(manifest.spec.workspace.terraformVersion, null), try(manifest.spec.workspace.terraform_version, null)), null)
+        auto_apply            = try(coalesce(try(manifest.spec.workspace.autoApply, null), try(manifest.spec.workspace.auto_apply, null)), null)
+        queue_all_runs        = try(coalesce(try(manifest.spec.workspace.queueAllRuns, null), try(manifest.spec.workspace.queue_all_runs, null)), null)
+        speculative_enabled   = try(coalesce(try(manifest.spec.workspace.speculativeEnabled, null), try(manifest.spec.workspace.speculative_enabled, null)), null)
+        working_directory     = try(coalesce(try(manifest.spec.workspace.workingDirectory, null), try(manifest.spec.workspace.working_directory, null)), null)
         tags                  = try(manifest.spec.workspace.tags, null)
-        manage_variables      = try(coalesce(manifest.spec.workspace.manageVariables, manifest.spec.workspace.manage_variables), null)
-        hcp_terraform_subject = try(coalesce(manifest.spec.workspace.hcpTerraformSubject, manifest.spec.workspace.hcp_terraform_subject), null)
-        vcs_repo = try(coalesce(manifest.spec.workspace.vcsRepo, manifest.spec.workspace.vcs_repo), null) == null ? null : {
-          branch                     = try(coalesce(manifest.spec.workspace.vcsRepo.branch, manifest.spec.workspace.vcs_repo.branch), null)
-          oauth_token_id             = try(coalesce(manifest.spec.workspace.vcsRepo.oauthTokenId, manifest.spec.workspace.vcs_repo.oauth_token_id), null)
-          github_app_installation_id = try(coalesce(manifest.spec.workspace.vcsRepo.githubAppInstallationId, manifest.spec.workspace.vcs_repo.github_app_installation_id), null)
-          ingress_submodules         = try(coalesce(manifest.spec.workspace.vcsRepo.ingressSubmodules, manifest.spec.workspace.vcs_repo.ingress_submodules), null)
-          trigger_patterns           = try(coalesce(manifest.spec.workspace.vcsRepo.triggerPatterns, manifest.spec.workspace.vcs_repo.trigger_patterns), null)
-          trigger_prefixes           = try(coalesce(manifest.spec.workspace.vcsRepo.triggerPrefixes, manifest.spec.workspace.vcs_repo.trigger_prefixes), null)
+        manage_variables      = try(coalesce(try(manifest.spec.workspace.manageVariables, null), try(manifest.spec.workspace.manage_variables, null)), null)
+        hcp_terraform_subject = try(coalesce(try(manifest.spec.workspace.hcpTerraformSubject, null), try(manifest.spec.workspace.hcp_terraform_subject, null)), null)
+        vcs_repo = try(coalesce(try(manifest.spec.workspace.vcsRepo, null), try(manifest.spec.workspace.vcs_repo, null)), null) == null ? null : {
+          branch                     = try(coalesce(try(manifest.spec.workspace.vcsRepo.branch, null), try(manifest.spec.workspace.vcs_repo.branch, null)), null)
+          oauth_token_id             = try(coalesce(try(manifest.spec.workspace.vcsRepo.oauthTokenId, null), try(manifest.spec.workspace.vcs_repo.oauth_token_id, null)), null)
+          github_app_installation_id = try(coalesce(try(manifest.spec.workspace.vcsRepo.githubAppInstallationId, null), try(manifest.spec.workspace.vcs_repo.github_app_installation_id, null)), null)
+          ingress_submodules         = try(coalesce(try(manifest.spec.workspace.vcsRepo.ingressSubmodules, null), try(manifest.spec.workspace.vcs_repo.ingress_submodules, null)), null)
+          trigger_patterns           = try(coalesce(try(manifest.spec.workspace.vcsRepo.triggerPatterns, null), try(manifest.spec.workspace.vcs_repo.trigger_patterns, null)), null)
+          trigger_prefixes           = try(coalesce(try(manifest.spec.workspace.vcsRepo.triggerPrefixes, null), try(manifest.spec.workspace.vcs_repo.trigger_prefixes, null)), null)
         }
       }
-      managed_policy_arns               = try(coalesce(manifest.spec.managedPolicyArns, manifest.spec.managed_policy_arns), null)
-      github_oidc_provider_host         = try(coalesce(manifest.spec.githubOidcProviderHost, manifest.spec.github_oidc_provider_host), null)
-      github_oidc_audience              = try(coalesce(manifest.spec.githubOidcAudience, manifest.spec.github_oidc_audience), null)
-      tfe_oidc_provider_host            = try(coalesce(manifest.spec.tfeOidcProviderHost, manifest.spec.tfe_oidc_provider_host), null)
-      tfe_oidc_audience                 = try(coalesce(manifest.spec.tfeOidcAudience, manifest.spec.tfe_oidc_audience), null)
-      stack_set_name_prefix             = try(coalesce(manifest.spec.stackSetNamePrefix, manifest.spec.stack_set_name_prefix), null)
-      stack_set_permission_model        = try(coalesce(manifest.spec.stackSetPermissionModel, manifest.spec.stack_set_permission_model), null)
-      stack_set_call_as                 = try(coalesce(manifest.spec.stackSetCallAs, manifest.spec.stack_set_call_as), null)
-      stack_set_operation_preferences   = try(coalesce(manifest.spec.stackSetOperationPreferences, manifest.spec.stack_set_operation_preferences), null)
-      retain_stack_instances_on_destroy = try(coalesce(manifest.spec.retainStackInstancesOnDestroy, manifest.spec.retain_stack_instances_on_destroy), null)
+      managed_policy_arns               = try(coalesce(try(manifest.spec.managedPolicyArns, null), try(manifest.spec.managed_policy_arns, null)), null)
+      github_oidc_provider_host         = try(coalesce(try(manifest.spec.githubOidcProviderHost, null), try(manifest.spec.github_oidc_provider_host, null)), null)
+      github_oidc_audience              = try(coalesce(try(manifest.spec.githubOidcAudience, null), try(manifest.spec.github_oidc_audience, null)), null)
+      tfe_oidc_provider_host            = try(coalesce(try(manifest.spec.tfeOidcProviderHost, null), try(manifest.spec.tfe_oidc_provider_host, null)), null)
+      tfe_oidc_audience                 = try(coalesce(try(manifest.spec.tfeOidcAudience, null), try(manifest.spec.tfe_oidc_audience, null)), null)
+      stack_set_name_prefix             = try(coalesce(try(manifest.spec.stackSetNamePrefix, null), try(manifest.spec.stack_set_name_prefix, null)), null)
+      stack_set_permission_model        = try(coalesce(try(manifest.spec.stackSetPermissionModel, null), try(manifest.spec.stack_set_permission_model, null)), null)
+      stack_set_call_as                 = try(coalesce(try(manifest.spec.stackSetCallAs, null), try(manifest.spec.stack_set_call_as, null)), null)
+      stack_set_operation_preferences   = try(coalesce(try(manifest.spec.stackSetOperationPreferences, null), try(manifest.spec.stack_set_operation_preferences, null)), null)
+      retain_stack_instances_on_destroy = try(coalesce(try(manifest.spec.retainStackInstancesOnDestroy, null), try(manifest.spec.retain_stack_instances_on_destroy, null)), null)
       tags                              = try(manifest.spec.tags, null)
     }
   }
