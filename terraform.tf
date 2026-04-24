@@ -18,13 +18,3 @@ terraform {
     }
   }
 }
-
-provider "github" {
-  alias = "emkaytec"
-  owner = var.github_owner
-}
-
-provider "tfe" {
-  alias        = "emkaytec"
-  organization = var.tfe_organization
-}

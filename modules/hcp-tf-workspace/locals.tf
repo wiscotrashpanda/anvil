@@ -19,7 +19,8 @@ locals {
     "organization:${tfe_workspace.this.organization}:project:${var.tfe_project_name}:workspace:${local.workspace_name}:run_phase:*",
   )
 
-  stack_set_name = "${coalesce(var.stack_set_name_prefix, local.repository_name)}-${var.environment}-provisioner-roles"
+  stack_set_name_base = var.stack_set_name_prefix == null ? local.workspace_name : "${var.stack_set_name_prefix}-${var.environment}"
+  stack_set_name      = "${local.stack_set_name_base}-provisioner-roles"
 
   common_tags = merge(var.tags, {
     ManagedBy  = "Terraform"

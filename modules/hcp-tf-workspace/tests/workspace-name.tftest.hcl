@@ -27,4 +27,9 @@ run "explicit_workspace_name_drives_provisioner_role_name" {
     condition     = output.provisioner_role.arn == "arn:aws:iam::111111111111:role/custom-admin-workspace-provisioner-role"
     error_message = "Expected the provisioner role ARN to include the explicit workspace_name-derived role name."
   }
+
+  assert {
+    condition     = output.stack_set.name == "custom-admin-workspace-provisioner-roles"
+    error_message = "Expected the explicit workspace_name to drive the StackSet name."
+  }
 }
