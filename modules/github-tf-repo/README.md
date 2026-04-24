@@ -85,7 +85,7 @@ Each environment defaults to:
 
 - workspace name: `<repository-name>-<environment>`
 - region: `us-east-1`
-- role name: `<repository-name>-<environment>-provisioner-role`
+- role name: `<workspace-name>-provisioner-role`
 - managed policy: `arn:aws:iam::aws:policy/ReadOnlyAccess`
 
 HCP Terraform workspace variables are created by default. `TFC_AWS_RUN_ROLE_ARN` points at the shared provisioner role.
