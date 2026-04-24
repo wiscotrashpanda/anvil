@@ -44,7 +44,7 @@ module "workspace" {
 
 ## Notes
 
-- `workspace_name` defaults to `<repository>-<environment>` and is also the default naming base for the provisioner role.
+- `workspace_name` defaults to `<repository>-<environment>` and is also the default naming base for the provisioner role and StackSet name.
 - `region` defaults to `us-east-1`.
 - When `tfe_vcs_repo` is set, the module uses `github_repository` as the HCP Terraform VCS identifier.
 - The GitHub provider owner and TFE provider organization still come from the caller-level provider configuration.

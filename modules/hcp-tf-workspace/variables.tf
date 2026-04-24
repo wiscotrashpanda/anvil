@@ -44,6 +44,7 @@ variable "managed_policy_arns" {
   description = "Managed policy ARNs attached to the provisioner role."
   type        = list(string)
   default     = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  nullable    = false
 }
 
 variable "github_actions_subject" {

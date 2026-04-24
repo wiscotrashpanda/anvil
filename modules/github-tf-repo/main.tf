@@ -8,16 +8,6 @@ module "github_repo" {
   repository = var.repository
 }
 
-moved {
-  from = github_repository.this
-  to   = module.github_repo.github_repository.this
-}
-
-moved {
-  from = github_branch_default.this
-  to   = module.github_repo.github_branch_default.this
-}
-
 module "hcp_tf_workspace" {
   for_each = var.environments
 
@@ -34,7 +24,7 @@ module "hcp_tf_workspace" {
   account_id             = each.value.account_id
   region                 = coalesce(try(each.value.region, null), var.default_region)
   workspace_name         = try(each.value.workspace_name, null)
-  managed_policy_arns    = try(each.value.managed_policy_arns, var.managed_policy_arns)
+  managed_policy_arns    = coalesce(try(each.value.managed_policy_arns, null), var.managed_policy_arns)
   github_actions_subject = try(each.value.github_actions_subject, null)
   tfe_subject            = try(each.value.tfe_subject, null)
 
@@ -68,74 +58,4 @@ module "hcp_tf_workspace" {
   stack_set_operation_preferences   = var.stack_set_operation_preferences
   retain_stack_instances_on_destroy = var.retain_stack_instances_on_destroy
   tags                              = var.tags
-}
-
-moved {
-  from = tfe_workspace.this
-  to   = module.hcp_tf_workspace.tfe_workspace.this
-}
-
-moved {
-  from = tfe_workspace_settings.this
-  to   = module.hcp_tf_workspace.tfe_workspace_settings.this
-}
-
-moved {
-  from = aws_cloudformation_stack_set.provisioner_roles
-  to   = module.hcp_tf_workspace.aws_cloudformation_stack_set.provisioner_roles
-}
-
-moved {
-  from = aws_cloudformation_stack_set_instance.provisioner_roles
-  to   = module.hcp_tf_workspace.aws_cloudformation_stack_set_instance.provisioner_roles
-}
-
-moved {
-  from = tfe_variable.account_id
-  to   = module.hcp_tf_workspace.tfe_variable.account_id
-}
-
-moved {
-  from = tfe_variable.aws_region
-  to   = module.hcp_tf_workspace.tfe_variable.aws_region
-}
-
-moved {
-  from = tfe_variable.aws_region_env
-  to   = module.hcp_tf_workspace.tfe_variable.aws_region_env
-}
-
-moved {
-  from = tfe_variable.tfc_aws_provider_auth
-  to   = module.hcp_tf_workspace.tfe_variable.tfc_aws_provider_auth
-}
-
-moved {
-  from = tfe_variable.tfc_aws_run_role_arn
-  to   = module.hcp_tf_workspace.tfe_variable.tfc_aws_run_role_arn
-}
-
-moved {
-  from = tfe_variable.tfc_aws_workload_identity_audience
-  to   = module.hcp_tf_workspace.tfe_variable.tfc_aws_workload_identity_audience
-}
-
-moved {
-  from = github_repository_environment.this
-  to   = module.hcp_tf_workspace.github_repository_environment.this
-}
-
-moved {
-  from = github_actions_environment_variable.aws_region
-  to   = module.hcp_tf_workspace.github_actions_environment_variable.aws_region
-}
-
-moved {
-  from = github_actions_environment_variable.aws_account_id
-  to   = module.hcp_tf_workspace.github_actions_environment_variable.aws_account_id
-}
-
-moved {
-  from = github_actions_environment_variable.aws_provisioner_role_arn
-  to   = module.hcp_tf_workspace.github_actions_environment_variable.aws_provisioner_role_arn
 }

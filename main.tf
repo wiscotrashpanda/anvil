@@ -4,7 +4,7 @@ module "github_repo" {
   source = "./modules/github-repo"
 
   providers = {
-    github = github.emkaytec
+    github = github.default
   }
 
   repository = local.github_repo_module_inputs[each.key]
@@ -16,9 +16,9 @@ module "hcp_tf_workspace" {
   source = "./modules/hcp-tf-workspace"
 
   providers = {
-    aws    = aws
-    github = github.emkaytec
-    tfe    = tfe.emkaytec
+    aws    = aws.default
+    github = github.default
+    tfe    = tfe.default
   }
 
   github_repository      = each.value.github_repository
@@ -26,7 +26,7 @@ module "hcp_tf_workspace" {
   account_id             = each.value.account_id
   region                 = try(each.value.region, null)
   workspace_name         = try(each.value.workspace_name, null)
-  managed_policy_arns    = try(each.value.managed_policy_arns, ["arn:aws:iam::aws:policy/ReadOnlyAccess"])
+  managed_policy_arns    = coalesce(try(each.value.managed_policy_arns, null), ["arn:aws:iam::aws:policy/ReadOnlyAccess"])
   github_actions_subject = try(each.value.github_actions_subject, null)
   tfe_subject            = try(each.value.tfe_subject, null)
 
@@ -68,9 +68,9 @@ module "github_tf_repo" {
   source = "./modules/github-tf-repo"
 
   providers = {
-    aws    = aws
-    github = github.emkaytec
-    tfe    = tfe.emkaytec
+    aws    = aws.default
+    github = github.default
+    tfe    = tfe.default
   }
 
   repository   = merge({ name = each.key }, try(each.value.spec.repository, {}))
@@ -78,7 +78,7 @@ module "github_tf_repo" {
 
   default_region                  = try(each.value.spec.default_region, "us-east-1")
   aws_partition                   = try(each.value.spec.aws_partition, "aws")
-  managed_policy_arns             = try(each.value.spec.managed_policy_arns, ["arn:aws:iam::aws:policy/ReadOnlyAccess"])
+  managed_policy_arns             = coalesce(try(each.value.spec.managed_policy_arns, null), ["arn:aws:iam::aws:policy/ReadOnlyAccess"])
   github_oidc_provider_host       = try(each.value.spec.github_oidc_provider_host, "token.actions.githubusercontent.com")
   github_oidc_audience            = try(each.value.spec.github_oidc_audience, "sts.amazonaws.com")
   tfe_oidc_provider_host          = try(each.value.spec.tfe_oidc_provider_host, "app.terraform.io")
