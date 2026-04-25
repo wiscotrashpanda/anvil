@@ -66,7 +66,7 @@ module "repo" {
 - `examples/basic` creates a standalone GitHub repository.
 - `examples/complete` declares every available module input and creates one Terraform workspace environment.
 
-The `.forge.example/example` directory mirrors these examples as `GitHubRepository` manifests for root-level desired-state composition.
+Root-level `GitHubRepository` manifest examples live in the repository README.
 
 ## Requirements
 

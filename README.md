@@ -2,7 +2,7 @@
 
 Anvil is being repurposed as the public-safe home for Emkaytec baseline architecture: standalone GitHub repositories, repo-backed HCP Terraform workspaces, and shared AWS provisioning roles.
 
-The earlier manifest authoring, schema, and reconciliation work remains in `emkaytec/forge`. That path works, and it is useful context, but the active direction for baseline cloud setup is now Terraform-first instead of manifest/reconcile-first. `emkaytec/alloy` is intentionally left unchanged until its next role is clearer.
+The earlier manifest authoring, schema, and reconciliation work remains in `emkaytec/forge`. That path works, and it is useful context, but the active direction for baseline cloud setup is now Terraform-first instead of manifest/reconcile-first. `emkaytec/alloy` now hosts reusable Terraform modules published through the private HCP Terraform module registry.
 
 ## Current Layout
 
@@ -34,6 +34,8 @@ Terraform reads desired state from YAML files in the root `.forge/` directory. T
 
 In GitHub Actions, check out the private manifests repo at the same level so its `.forge/` directory lands at the root of this working tree and Terraform can read it in place. Locally, populate `.forge/` the same way (for example, by cloning or symlinking the private repo so its `.forge/` is visible at the repo root).
 
+The intended authoring path is the Emkaytec Forge CLI (`emkaytec/forge`), which can generate these manifests into `.forge/`. Adding or editing the YAML files manually also works.
+
 Use one file per desired unit.
 
 Use `GitHubRepository` for a standalone non-Terraform GitHub repository:
@@ -47,11 +49,11 @@ spec:
   repository:
     description: Public documentation site.
     visibility: public
-    autoInit: true
-    defaultBranch: main
     topics:
       - docs
       - website
+    autoInit: true
+    defaultBranch: main
     features:
       hasIssues: true
       hasProjects: false
@@ -69,24 +71,109 @@ Set `createTerraformWorkspaces: true` on `GitHubRepository` for a repo-backed Te
 apiVersion: anvil.emkaytec.dev/v1alpha1
 kind: GitHubRepository
 metadata:
-  name: sample-service
+  name: complete-service
 spec:
   createTerraformWorkspaces: true
   repository:
-    description: Terraform-managed sample service.
+    description: Complete example Terraform-backed GitHub repository.
     visibility: private
+    homepage: https://example.com/platform/complete-service
     topics:
       - aws
       - terraform
+      - platform
+    autoInit: true
+    defaultBranch: main
+    features:
+      hasIssues: true
+      hasProjects: false
+      hasWiki: false
+      hasDiscussions: true
+    mergePolicy:
+      allowMergeCommit: true
+      allowSquashMerge: true
+      allowRebaseMerge: false
+      deleteBranchOnMerge: true
+
+  aws:
+    region: us-east-1
+    partition: aws
+    managedPolicyArns:
+      - arn:aws:iam::aws:policy/ReadOnlyAccess
+    githubOidcProviderHost: token.actions.githubusercontent.com
+    githubOidcAudience: sts.amazonaws.com
+    tfeOidcProviderHost: app.terraform.io
+    tfeOidcAudience: aws.workload.identity
+    stackSetNamePrefix: complete-service
+    stackSetPermissionModel: SELF_MANAGED
+    stackSetCallAs: SELF
+    stackSetOperationPreferences:
+      failure_tolerance_count: 0
+      max_concurrent_count: 1
+      region_concurrency_type: SEQUENTIAL
+      region_order:
+        - us-east-2
+    retainStackInstancesOnDestroy: false
+    tags:
+      managed-by: terraform
+      owner: platform
+      service: complete-service
 
   environments:
-    dev:
+    admin:
       aws:
         accountId: "111111111111"
-    prod:
-      aws:
-        accountId: "222222222222"
         region: us-east-2
+        partition: aws
+        managedPolicyArns:
+          - arn:aws:iam::aws:policy/PowerUserAccess
+        githubActionsSubject: repo:emkaytec/complete-service:environment:admin
+      workspace:
+        name: complete-service-admin
+        projectId: prj-example
+        projectName: platform
+        executionMode: agent
+        agentPoolId: apool-example
+        terraformVersion: "1.14.8"
+        autoApply: false
+        queueAllRuns: true
+        speculativeEnabled: true
+        workingDirectory: terraform
+        tags:
+          environment: admin
+          owner: platform
+          service: complete-service
+        vcsRepo:
+          branch: main
+          githubAppInstallationId: 12345678
+          ingressSubmodules: false
+          triggerPatterns:
+            - terraform/**/*.tf
+          triggerPrefixes:
+            - terraform/
+        manageVariables: true
+        hcpTerraformSubject: organization:emkaytec:project:platform:workspace:complete-service-admin:run_phase:*
+
+  workspace:
+    projectName: platform
+    terraformVersion: "1.14.8"
+    executionMode: remote
+    autoApply: false
+    queueAllRuns: true
+    speculativeEnabled: true
+    workingDirectory: terraform
+    tags:
+      owner: platform
+      service: complete-service
+    vcsRepo:
+      branch: main
+      githubAppInstallationId: 12345678
+      ingressSubmodules: false
+      triggerPatterns:
+        - terraform/**/*.tf
+      triggerPrefixes:
+        - terraform/
+    manageVariables: true
 ```
 
 `GitHubRepository` manifests inherit their owner from the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration. `metadata.name` becomes the Terraform module key and also defaults `spec.repository.name` when omitted.
