@@ -2,13 +2,7 @@ module "github_repo" {
   for_each = local.managed_github_repo_module_inputs
 
   source  = "app.terraform.io/emkaytec/repository/github"
-  version = "0.0.1"
-
-  providers = {
-    aws    = aws.default
-    github = github.default
-    tfe    = tfe.default
-  }
+  version = "0.1.0"
 
   repository                  = each.value.repository
   create_terraform_workspaces = each.value.create_terraform_workspaces
