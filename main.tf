@@ -1,7 +1,8 @@
 module "github_repo" {
   for_each = local.managed_github_repo_module_inputs
 
-  source = "./modules/github-repo"
+  source  = "app.terraform.io/emkaytec/repository/github"
+  version = "0.0.1"
 
   providers = {
     aws    = aws.default

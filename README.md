@@ -7,11 +7,9 @@ The earlier manifest authoring, schema, and reconciliation work remains in `emka
 ## Current Layout
 
 - `.forge/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there. The directory is gitignored and intentionally never committed to this public repository; it is supplied at plan/apply time from a private configuration repository (see [Manifests](#manifests)).
-- `modules/github-repo/` defines the GitHub repository module. It can create a standalone repository, or it can also create repo-backed HCP Terraform workspaces and AWS provisioner roles when `create_terraform_workspaces` is enabled.
-- `modules/github-repo/examples/basic/` shows a minimal standalone caller shape.
-- `modules/github-repo/examples/complete/` shows the full repo-backed HCP Terraform workspace and AWS provisioner role shape.
+- The root Terraform translates `.forge/` manifests into calls to the private HCP Terraform module registry module `app.terraform.io/emkaytec/repository/github`, pinned at version `0.0.1`.
 
-The GitHub repository module always creates:
+The private registry repository module always creates:
 
 - one GitHub repository
 
@@ -24,9 +22,9 @@ When Terraform workspaces are enabled, it also creates:
 
 ## Direction
 
-For now, this repository is the design and implementation space for the baseline architecture. Once the module contract settles, `modules/github-repo` can be extracted into a standalone `terraform-github-repository` module repository with minimal path churn.
+For now, this repository is the public-safe composition layer for Emkaytec baseline architecture. The reusable Terraform module implementation and versioning live outside this repo in Emkaytec's private HCP Terraform module registry.
 
-Keep public code, module contracts, and sanitized examples here. Real account IDs, operational manifests, tokens, and environment-specific values belong in private configuration.
+Keep public composition code and sanitized manifest examples here. Real account IDs, operational manifests, tokens, and environment-specific values belong in private configuration.
 
 ## Manifests
 
@@ -180,7 +178,7 @@ spec:
 
 ## Running Terraform
 
-Run Terraform from the repo root once `.forge/` has been populated from the private manifests repository:
+Run Terraform from the repo root once `.forge/` has been populated from the private manifests repository. `terraform init` downloads the pinned private module from HCP Terraform, so the environment needs credentials for `app.terraform.io` through Terraform CLI login or `TF_TOKEN_app_terraform_io`.
 
 ```bash
 terraform init
