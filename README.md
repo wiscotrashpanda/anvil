@@ -7,7 +7,7 @@ The earlier manifest authoring, schema, and reconciliation work remains in `emka
 ## Current Layout
 
 - `.forge/` is the root desired-state input directory. Terraform reads `.yaml` and `.yml` files from there. The directory is gitignored and intentionally never committed to this public repository; it is supplied at plan/apply time from a private configuration repository (see [Manifests](#manifests)).
-- The root Terraform translates `.forge/` manifests into calls to the private HCP Terraform module registry module `app.terraform.io/emkaytec/repository/github`, pinned at version `0.0.1`.
+- The root Terraform translates `.forge/` manifests into calls to the private HCP Terraform module registry module `app.terraform.io/emkaytec/repository/github`, pinned at version `0.3.0`.
 
 The private registry repository module always creates:
 
@@ -149,6 +149,12 @@ spec:
             - terraform/**/*.tf
           triggerPrefixes:
             - terraform/
+        variables:
+          - key: CUSTOM_ADMIN_ENV
+            value: admin-value
+            type: env
+            sensitive: false
+            description: Example environment variable scoped to the admin workspace.
         manageVariables: true
         hcpTerraformSubject: organization:emkaytec:project:platform:workspace:complete-service-admin:run_phase:*
 
@@ -171,10 +177,18 @@ spec:
         - terraform/**/*.tf
       triggerPrefixes:
         - terraform/
+    variables:
+      - key: custom_workspace_variable
+        value: example-value
+        type: terraform
+        sensitive: true
+        description: Example Terraform variable created in every managed workspace.
     manageVariables: true
 ```
 
 `GitHubRepository` manifests inherit their owner from the root `github_owner` value because the Terraform GitHub provider selects one owner per provider configuration. `metadata.name` becomes the Terraform module key and also defaults `spec.repository.name` when omitted.
+
+`workspace.variables` and `environments.*.workspace.variables` create custom HCP Terraform workspace variables. Each entry must include `key` and `value`; `type` defaults in the module to `terraform` and may be `terraform` or `env`, `sensitive` defaults to `false`, and `description` is optional. Environment-specific variables are appended to shared workspace variables, and each final workspace must have unique `key`/`type` pairs.
 
 ## Running Terraform
 

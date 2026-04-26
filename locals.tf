@@ -13,6 +13,7 @@ locals {
     speculative_enabled   = null
     working_directory     = null
     tags                  = null
+    variables             = []
     manage_variables      = null
     hcp_terraform_subject = null
     vcs_repo              = null
@@ -154,17 +155,26 @@ locals {
             github_actions_subject = try(coalesce(try(config.aws.githubActionsSubject, null), try(config.aws.github_actions_subject, null), try(config.githubActionsSubject, null), try(config.github_actions_subject, null)), null)
           }
           workspace = try(config.workspace, null) == null ? local.empty_workspace_input : {
-            name                  = try(config.workspace.name, null)
-            project_id            = try(coalesce(try(config.workspace.projectId, null), try(config.workspace.project_id, null)), null)
-            project_name          = try(coalesce(try(config.workspace.projectName, null), try(config.workspace.project_name, null)), null)
-            execution_mode        = try(coalesce(try(config.workspace.executionMode, null), try(config.workspace.execution_mode, null)), null)
-            agent_pool_id         = try(coalesce(try(config.workspace.agentPoolId, null), try(config.workspace.agent_pool_id, null)), null)
-            terraform_version     = try(coalesce(try(config.workspace.terraformVersion, null), try(config.workspace.terraform_version, null)), null)
-            auto_apply            = try(coalesce(try(config.workspace.autoApply, null), try(config.workspace.auto_apply, null)), null)
-            queue_all_runs        = try(coalesce(try(config.workspace.queueAllRuns, null), try(config.workspace.queue_all_runs, null)), null)
-            speculative_enabled   = try(coalesce(try(config.workspace.speculativeEnabled, null), try(config.workspace.speculative_enabled, null)), null)
-            working_directory     = try(coalesce(try(config.workspace.workingDirectory, null), try(config.workspace.working_directory, null)), null)
-            tags                  = try(config.workspace.tags, null)
+            name                = try(config.workspace.name, null)
+            project_id          = try(coalesce(try(config.workspace.projectId, null), try(config.workspace.project_id, null)), null)
+            project_name        = try(coalesce(try(config.workspace.projectName, null), try(config.workspace.project_name, null)), null)
+            execution_mode      = try(coalesce(try(config.workspace.executionMode, null), try(config.workspace.execution_mode, null)), null)
+            agent_pool_id       = try(coalesce(try(config.workspace.agentPoolId, null), try(config.workspace.agent_pool_id, null)), null)
+            terraform_version   = try(coalesce(try(config.workspace.terraformVersion, null), try(config.workspace.terraform_version, null)), null)
+            auto_apply          = try(coalesce(try(config.workspace.autoApply, null), try(config.workspace.auto_apply, null)), null)
+            queue_all_runs      = try(coalesce(try(config.workspace.queueAllRuns, null), try(config.workspace.queue_all_runs, null)), null)
+            speculative_enabled = try(coalesce(try(config.workspace.speculativeEnabled, null), try(config.workspace.speculative_enabled, null)), null)
+            working_directory   = try(coalesce(try(config.workspace.workingDirectory, null), try(config.workspace.working_directory, null)), null)
+            tags                = try(config.workspace.tags, null)
+            variables = [
+              for variable in try(config.workspace.variables, []) : {
+                key         = try(variable.key, null)
+                value       = try(variable.value, null)
+                type        = try(coalesce(try(variable.type, null), try(variable.category, null)), null)
+                sensitive   = try(variable.sensitive, null)
+                description = try(variable.description, null)
+              }
+            ]
             manage_variables      = try(coalesce(try(config.workspace.manageVariables, null), try(config.workspace.manage_variables, null)), null)
             hcp_terraform_subject = try(coalesce(try(config.workspace.hcpTerraformSubject, null), try(config.workspace.hcp_terraform_subject, null)), null)
             vcs_repo = try(coalesce(try(config.workspace.vcsRepo, null), try(config.workspace.vcs_repo, null)), null) == null ? null : {
@@ -196,17 +206,26 @@ locals {
       }
 
       workspace = try(manifest.spec.workspace, null) == null ? local.empty_workspace_input : {
-        name                  = try(manifest.spec.workspace.name, null)
-        project_id            = try(coalesce(try(manifest.spec.workspace.projectId, null), try(manifest.spec.workspace.project_id, null)), null)
-        project_name          = try(coalesce(try(manifest.spec.workspace.projectName, null), try(manifest.spec.workspace.project_name, null)), null)
-        execution_mode        = try(coalesce(try(manifest.spec.workspace.executionMode, null), try(manifest.spec.workspace.execution_mode, null)), null)
-        agent_pool_id         = try(coalesce(try(manifest.spec.workspace.agentPoolId, null), try(manifest.spec.workspace.agent_pool_id, null)), null)
-        terraform_version     = try(coalesce(try(manifest.spec.workspace.terraformVersion, null), try(manifest.spec.workspace.terraform_version, null)), null)
-        auto_apply            = try(coalesce(try(manifest.spec.workspace.autoApply, null), try(manifest.spec.workspace.auto_apply, null)), null)
-        queue_all_runs        = try(coalesce(try(manifest.spec.workspace.queueAllRuns, null), try(manifest.spec.workspace.queue_all_runs, null)), null)
-        speculative_enabled   = try(coalesce(try(manifest.spec.workspace.speculativeEnabled, null), try(manifest.spec.workspace.speculative_enabled, null)), null)
-        working_directory     = try(coalesce(try(manifest.spec.workspace.workingDirectory, null), try(manifest.spec.workspace.working_directory, null)), null)
-        tags                  = try(manifest.spec.workspace.tags, null)
+        name                = try(manifest.spec.workspace.name, null)
+        project_id          = try(coalesce(try(manifest.spec.workspace.projectId, null), try(manifest.spec.workspace.project_id, null)), null)
+        project_name        = try(coalesce(try(manifest.spec.workspace.projectName, null), try(manifest.spec.workspace.project_name, null)), null)
+        execution_mode      = try(coalesce(try(manifest.spec.workspace.executionMode, null), try(manifest.spec.workspace.execution_mode, null)), null)
+        agent_pool_id       = try(coalesce(try(manifest.spec.workspace.agentPoolId, null), try(manifest.spec.workspace.agent_pool_id, null)), null)
+        terraform_version   = try(coalesce(try(manifest.spec.workspace.terraformVersion, null), try(manifest.spec.workspace.terraform_version, null)), null)
+        auto_apply          = try(coalesce(try(manifest.spec.workspace.autoApply, null), try(manifest.spec.workspace.auto_apply, null)), null)
+        queue_all_runs      = try(coalesce(try(manifest.spec.workspace.queueAllRuns, null), try(manifest.spec.workspace.queue_all_runs, null)), null)
+        speculative_enabled = try(coalesce(try(manifest.spec.workspace.speculativeEnabled, null), try(manifest.spec.workspace.speculative_enabled, null)), null)
+        working_directory   = try(coalesce(try(manifest.spec.workspace.workingDirectory, null), try(manifest.spec.workspace.working_directory, null)), null)
+        tags                = try(manifest.spec.workspace.tags, null)
+        variables = [
+          for variable in try(manifest.spec.workspace.variables, []) : {
+            key         = try(variable.key, null)
+            value       = try(variable.value, null)
+            type        = try(coalesce(try(variable.type, null), try(variable.category, null)), null)
+            sensitive   = try(variable.sensitive, null)
+            description = try(variable.description, null)
+          }
+        ]
         manage_variables      = try(coalesce(try(manifest.spec.workspace.manageVariables, null), try(manifest.spec.workspace.manage_variables, null)), null)
         hcp_terraform_subject = try(coalesce(try(manifest.spec.workspace.hcpTerraformSubject, null), try(manifest.spec.workspace.hcp_terraform_subject, null)), null)
         vcs_repo = try(coalesce(try(manifest.spec.workspace.vcsRepo, null), try(manifest.spec.workspace.vcs_repo, null)), null) == null ? null : {
